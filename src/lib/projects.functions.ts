@@ -66,7 +66,7 @@ export const updateSlide = createServerFn({ method: "POST" })
       .from("projects").select("clerk_user_id").eq("id", slide.project_id).maybeSingle();
     if (!project || project.clerk_user_id !== userId) throw new Response("Forbidden", { status: 403 });
 
-    const update: Record<string, unknown> = {};
+    const update: { title?: string; body?: string; notes?: string } = {};
     if (data.title !== undefined) update.title = data.title;
     if (data.body !== undefined) update.body = data.body;
     if (data.notes !== undefined) update.notes = data.notes;

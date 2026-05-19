@@ -1,12 +1,14 @@
-import { getAuth } from "@clerk/tanstack-react-start/server";
-import { getWebRequest } from "@tanstack/react-start/server";
+import { auth } from "@clerk/tanstack-react-start/server";
 
 export async function requireUserId(): Promise<string> {
-  const request = getWebRequest();
-  if (!request) throw new Error("No request");
-  const auth = await getAuth(request);
-  if (!auth.userId) {
+  const session = await auth();
+  if (!session.userId) {
     throw new Response("Unauthorized", { status: 401 });
   }
-  return auth.userId;
+  return session.userId;
+}
+
+export async function getOptionalUserId(): Promise<string | null> {
+  const session = await auth();
+  return session.userId ?? null;
 }
