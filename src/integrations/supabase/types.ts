@@ -14,7 +14,86 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      projects: {
+        Row: {
+          clerk_user_id: string
+          created_at: string
+          description: string | null
+          id: string
+          status: string
+          theme: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          clerk_user_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          status?: string
+          theme?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          clerk_user_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          status?: string
+          theme?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      slides: {
+        Row: {
+          body: string | null
+          bullets: Json | null
+          created_at: string
+          id: string
+          layout: string
+          notes: string | null
+          position: number
+          project_id: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          body?: string | null
+          bullets?: Json | null
+          created_at?: string
+          id?: string
+          layout?: string
+          notes?: string | null
+          position: number
+          project_id: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          body?: string | null
+          bullets?: Json | null
+          created_at?: string
+          id?: string
+          layout?: string
+          notes?: string | null
+          position?: number
+          project_id?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "slides_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
