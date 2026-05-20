@@ -13,13 +13,13 @@ export function Navbar() {
             <div className="grid place-items-center w-8 h-8 rounded-full gradient-ember shadow-glow">
               <Sparkles className="w-4 h-4 text-white" />
             </div>
-            <span className="font-display text-xl text-ink">Lumen</span>
+            <span className="font-display text-xl text-ink">Slide Sphere</span>
           </Link>
           <nav className="hidden md:flex items-center gap-7 text-sm text-muted-foreground">
             {!isSignedIn && (
               <>
                 <a href="/#features" className="hover:text-foreground transition">Features</a>
-                <a href="/#pricing" className="hover:text-foreground transition">Pricing</a>
+                <a href="/#pricing" className="hover:text-foreground transition">Subscription</a>
               </>
             )}
           </nav>
