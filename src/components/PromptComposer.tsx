@@ -77,7 +77,7 @@ export function PromptComposer({ onCreated, compact = false }: Props) {
         <textarea
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
-          placeholder="Describe your presentation… e.g. ‘A pitch deck for an AI-powered fitness coaching startup targeting busy professionals.’"
+          placeholder="Describe your presentation…"
           rows={compact ? 3 : 4}
           className="w-full resize-none bg-transparent text-base sm:text-lg text-ink placeholder:text-muted-foreground/80 focus:outline-none"
           disabled={mut.isPending}
