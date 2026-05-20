@@ -43,7 +43,7 @@ export function Footer() {
         </div>
 
         <div className="mt-16 pt-8 border-t border-white/10 flex flex-wrap items-center justify-between gap-4">
-          <p className="text-xs text-white/50">© {new Date().getFullYear()} Lumen. All rights reserved.</p>
+          <p className="text-xs text-white/50">© {new Date().getFullYear()} Slide Sphere. All rights reserved.</p>
           <div className="flex gap-5 text-xs text-white/50">
             <Link to="/" className="hover:text-white">Home</Link>
             <a href="#" className="hover:text-white">Status</a>
