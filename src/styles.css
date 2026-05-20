@@ -145,4 +145,12 @@
   .shadow-glow {
     box-shadow: 0 10px 40px -10px rgba(232, 93, 58, 0.45);
   }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  .animate-marquee {
+    animation: marquee 40s linear infinite;
+    width: max-content;
+  }
 }
