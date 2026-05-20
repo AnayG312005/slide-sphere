@@ -11,7 +11,7 @@ export function Footer() {
               <div className="grid place-items-center w-9 h-9 rounded-full gradient-ember shadow-glow">
                 <Sparkles className="w-4 h-4 text-white" />
               </div>
-              <span className="font-display text-2xl">Lumen</span>
+              <span className="font-display text-2xl">Slide Sphere</span>
             </div>
             <p className="text-sm text-white/60 max-w-xs leading-relaxed">
               AI-powered slide decks that feel handcrafted. Generate, edit, and ship presentations in seconds.
