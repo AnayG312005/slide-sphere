@@ -16,9 +16,12 @@ export function Navbar() {
             <span className="font-display text-xl text-ink">Lumen</span>
           </Link>
           <nav className="hidden md:flex items-center gap-7 text-sm text-muted-foreground">
-            <a href="/#features" className="hover:text-foreground transition">Features</a>
-            <a href="/#how" className="hover:text-foreground transition">How it works</a>
-            <a href="/#pricing" className="hover:text-foreground transition">Pricing</a>
+            {!isSignedIn && (
+              <>
+                <a href="/#features" className="hover:text-foreground transition">Features</a>
+                <a href="/#pricing" className="hover:text-foreground transition">Pricing</a>
+              </>
+            )}
           </nav>
           <div className="flex items-center gap-2 min-h-[40px]">
             {isLoaded && !isSignedIn && (
