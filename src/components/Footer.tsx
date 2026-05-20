@@ -26,9 +26,8 @@ export function Footer() {
           </div>
 
           {[
-            { title: "Product", links: ["Features", "Pricing", "Templates", "Changelog"] },
-            { title: "Company", links: ["About", "Blog", "Careers", "Contact"] },
-            { title: "Legal", links: ["Privacy", "Terms", "Security", "Cookies"] },
+            { title: "Product", links: ["Features", "Pricing"] },
+            { title: "Company", links: ["About"] },
           ].map((col) => (
             <div key={col.title}>
               <div className="text-xs uppercase tracking-widest text-white/40 mb-4">{col.title}</div>
