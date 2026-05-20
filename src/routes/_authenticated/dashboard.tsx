@@ -55,7 +55,7 @@ function Dashboard() {
           What should we <span className="italic text-gradient-ember">create</span> today?
         </h1>
         <p className="mt-4 text-muted-foreground max-w-xl mx-auto">
-          Describe your topic or upload a document — Lumen will draft the deck.
+          Describe your idea, attach a document, choose your length. Slide Sphere do the rest.
         </p>
       </div>
 
