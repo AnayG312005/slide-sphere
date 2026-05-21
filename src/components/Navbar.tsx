@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useAuth, UserButton } from "@clerk/tanstack-react-start";
 import { Sparkles } from "lucide-react";
+import { CreditBadge } from "./CreditBadge";
 
 export function Navbar() {
   const { isLoaded, isSignedIn } = useAuth();
@@ -19,7 +20,7 @@ export function Navbar() {
             {!isSignedIn && (
               <>
                 <a href="/#features" className="hover:text-foreground transition">Features</a>
-                <a href="/#pricing" className="hover:text-foreground transition">Subscription</a>
+                <Link to="/pricing" className="hover:text-foreground transition">Pricing</Link>
               </>
             )}
           </nav>
@@ -36,6 +37,7 @@ export function Navbar() {
             )}
             {isLoaded && isSignedIn && (
               <>
+                <CreditBadge />
                 <Link to="/dashboard" className="hidden sm:inline-flex text-sm px-4 py-2 rounded-full hover:bg-accent text-foreground">
                   Dashboard
                 </Link>
