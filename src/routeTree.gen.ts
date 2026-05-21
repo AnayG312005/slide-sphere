@@ -13,7 +13,6 @@ import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedNewRouteImport } from './routes/_authenticated/new'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedEditorIdRouteImport } from './routes/_authenticated/editor.$id'
 
@@ -36,11 +35,6 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedNewRoute = AuthenticatedNewRouteImport.update({
-  id: '/new',
-  path: '/new',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -57,7 +51,6 @@ export interface FileRoutesByFullPath {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/new': typeof AuthenticatedNewRoute
   '/editor/$id': typeof AuthenticatedEditorIdRoute
 }
 export interface FileRoutesByTo {
@@ -65,7 +58,6 @@ export interface FileRoutesByTo {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/new': typeof AuthenticatedNewRoute
   '/editor/$id': typeof AuthenticatedEditorIdRoute
 }
 export interface FileRoutesById {
@@ -75,20 +67,13 @@ export interface FileRoutesById {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/new': typeof AuthenticatedNewRoute
   '/_authenticated/editor/$id': typeof AuthenticatedEditorIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/sign-in'
-    | '/sign-up'
-    | '/dashboard'
-    | '/new'
-    | '/editor/$id'
+  fullPaths: '/' | '/sign-in' | '/sign-up' | '/dashboard' | '/editor/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/sign-in' | '/sign-up' | '/dashboard' | '/new' | '/editor/$id'
+  to: '/' | '/sign-in' | '/sign-up' | '/dashboard' | '/editor/$id'
   id:
     | '__root__'
     | '/'
@@ -96,7 +81,6 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/_authenticated/dashboard'
-    | '/_authenticated/new'
     | '/_authenticated/editor/$id'
   fileRoutesById: FileRoutesById
 }
@@ -137,13 +121,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/new': {
-      id: '/_authenticated/new'
-      path: '/new'
-      fullPath: '/new'
-      preLoaderRoute: typeof AuthenticatedNewRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -163,13 +140,11 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedNewRoute: typeof AuthenticatedNewRoute
   AuthenticatedEditorIdRoute: typeof AuthenticatedEditorIdRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedNewRoute: AuthenticatedNewRoute,
   AuthenticatedEditorIdRoute: AuthenticatedEditorIdRoute,
 }
 
