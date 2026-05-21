@@ -14,13 +14,85 @@ export type Database = {
   }
   public: {
     Tables: {
+      credit_transactions: {
+        Row: {
+          clerk_user_id: string
+          created_at: string
+          delta: number
+          id: string
+          metadata: Json | null
+          project_id: string | null
+          reason: string
+        }
+        Insert: {
+          clerk_user_id: string
+          created_at?: string
+          delta: number
+          id?: string
+          metadata?: Json | null
+          project_id?: string | null
+          reason: string
+        }
+        Update: {
+          clerk_user_id?: string
+          created_at?: string
+          delta?: number
+          id?: string
+          metadata?: Json | null
+          project_id?: string | null
+          reason?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          clerk_user_id: string
+          created_at: string
+          credits: number
+          display_name: string | null
+          email: string | null
+          id: string
+          plan: string
+          total_earned: number
+          total_spent: number
+          updated_at: string
+        }
+        Insert: {
+          clerk_user_id: string
+          created_at?: string
+          credits?: number
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          plan?: string
+          total_earned?: number
+          total_spent?: number
+          updated_at?: string
+        }
+        Update: {
+          clerk_user_id?: string
+          created_at?: string
+          credits?: number
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          plan?: string
+          total_earned?: number
+          total_spent?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       projects: {
         Row: {
           clerk_user_id: string
           created_at: string
+          density: string
           description: string | null
           id: string
+          slide_count: number | null
           status: string
+          style: string
           theme: string
           title: string
           updated_at: string
@@ -28,9 +100,12 @@ export type Database = {
         Insert: {
           clerk_user_id: string
           created_at?: string
+          density?: string
           description?: string | null
           id?: string
+          slide_count?: number | null
           status?: string
+          style?: string
           theme?: string
           title: string
           updated_at?: string
@@ -38,9 +113,12 @@ export type Database = {
         Update: {
           clerk_user_id?: string
           created_at?: string
+          density?: string
           description?: string | null
           id?: string
+          slide_count?: number | null
           status?: string
+          style?: string
           theme?: string
           title?: string
           updated_at?: string
@@ -53,6 +131,8 @@ export type Database = {
           bullets: Json | null
           created_at: string
           id: string
+          image_source: string | null
+          image_url: string | null
           layout: string
           notes: string | null
           position: number
@@ -65,6 +145,8 @@ export type Database = {
           bullets?: Json | null
           created_at?: string
           id?: string
+          image_source?: string | null
+          image_url?: string | null
           layout?: string
           notes?: string | null
           position: number
@@ -77,6 +159,8 @@ export type Database = {
           bullets?: Json | null
           created_at?: string
           id?: string
+          image_source?: string | null
+          image_url?: string | null
           layout?: string
           notes?: string | null
           position?: number
@@ -99,7 +183,45 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      add_credits: {
+        Args: {
+          _amount: number
+          _clerk_user_id: string
+          _metadata?: Json
+          _reason: string
+        }
+        Returns: number
+      }
+      consume_credits: {
+        Args: {
+          _amount: number
+          _clerk_user_id: string
+          _project_id?: string
+          _reason: string
+        }
+        Returns: number
+      }
+      ensure_profile: {
+        Args: { _clerk_user_id: string; _email: string; _name: string }
+        Returns: {
+          clerk_user_id: string
+          created_at: string
+          credits: number
+          display_name: string | null
+          email: string | null
+          id: string
+          plan: string
+          total_earned: number
+          total_spent: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       [_ in never]: never
