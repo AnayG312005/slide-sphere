@@ -1,7 +1,7 @@
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { Link } from "@tanstack/react-router";
+
 import { useUser } from "@clerk/tanstack-react-start";
 import { getMyProfile } from "@/lib/profile.functions";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,11 +30,10 @@ export function CreditBadge() {
   const low = credits !== undefined && credits < 5;
 
   return (
-    <Link
-      to="/billing"
+    <div
       className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium transition ${
-        low ? "bg-destructive/10 text-destructive border-destructive/30 hover:bg-destructive/20"
-            : "bg-secondary text-ink border-border hover:bg-accent"
+        low ? "bg-destructive/10 text-destructive border-destructive/30"
+            : "bg-secondary text-ink border-border"
       }`}
       title={`${credits ?? "…"} credits remaining`}
     >
@@ -45,6 +44,6 @@ export function CreditBadge() {
       )}
       <span className="tabular-nums">{credits ?? "—"}</span>
       <span className="text-muted-foreground">credits</span>
-    </Link>
+    </div>
   );
 }
