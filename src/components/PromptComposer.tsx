@@ -61,7 +61,6 @@ export function PromptComposer({ compact = false }: Props) {
     setFile(f);
   };
 
-  const bucketIsPremium = SLIDE_BUCKETS.find(b => b.value === slideValue)?.premium;
   const composedTopic = file ? `${prompt.trim()}\n\n(Source document attached: ${file.name})` : prompt.trim();
 
   return (
@@ -121,11 +120,6 @@ export function PromptComposer({ compact = false }: Props) {
               className="hidden"
               onChange={(e) => onFile(e.target.files?.[0] ?? null)}
             />
-            {bucketIsPremium && (
-              <span className="text-[11px] text-primary inline-flex items-center gap-1">
-                <Crown className="w-3 h-3" /> Premium tier
-              </span>
-            )}
           </div>
           <button
             type="submit"
