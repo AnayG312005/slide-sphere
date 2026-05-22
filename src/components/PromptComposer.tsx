@@ -2,18 +2,18 @@ import { useState, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@clerk/tanstack-react-start";
 import { toast } from "sonner";
-import { Wand2, Paperclip, X, Crown } from "lucide-react";
+import { Wand2, Paperclip, X } from "lucide-react";
 import { GenerationModal } from "./GenerationModal";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { getMyProfile } from "@/lib/profile.functions";
 
 const SLIDE_BUCKETS = [
-  { label: "0–3", value: 3, premium: false },
-  { label: "3–6", value: 6, premium: false },
-  { label: "6–9", value: 9, premium: false },
-  { label: "9–12", value: 12, premium: true },
-  { label: "12–15", value: 15, premium: true },
+  { label: "0–3", value: 3 },
+  { label: "3–6", value: 6 },
+  { label: "6–9", value: 9 },
+  { label: "9–12", value: 12 },
+  { label: "12–15", value: 15 },
 ] as const;
 
 interface Props {
@@ -48,12 +48,6 @@ export function PromptComposer({ compact = false }: Props) {
     }
     if (prompt.trim().length < 3 && !file) {
       toast.error("Describe your topic or attach a file");
-      return;
-    }
-    const bucket = SLIDE_BUCKETS.find(b => b.value === slideValue);
-    if (bucket?.premium && !isPremiumPlan) {
-      toast.error("9+ slide decks require Premium. Upgrade to unlock.");
-      navigate({ to: "/pricing" });
       return;
     }
     setModalOpen(true);
@@ -110,7 +104,6 @@ export function PromptComposer({ compact = false }: Props) {
                     }`}
                   >
                     {b.label}
-                    {b.premium && <Crown className={`inline-block w-3 h-3 ml-1 -mt-0.5 ${active ? "text-white" : "text-primary"}`} />}
                   </button>
                 );
               })}
