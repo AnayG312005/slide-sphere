@@ -18,8 +18,8 @@ export const getMyProfile = createServerFn({ method: "GET" }).handler(async () =
 
   const { data, error } = await supabaseAdmin.rpc("ensure_profile", {
     _clerk_user_id: userId,
-    _email: email,
-    _name: name,
+    _email: email ?? "",
+    _name: name ?? "",
   });
   if (error) throw new Error(error.message);
   const profile = Array.isArray(data) ? data[0] : data;
