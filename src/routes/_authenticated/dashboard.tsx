@@ -7,6 +7,7 @@ import { listProjects, deleteProject } from "@/lib/projects.functions";
 import { PromptComposer } from "@/components/PromptComposer";
 import { supabase } from "@/integrations/supabase/client";
 import { FileText, Trash2, Loader2, Sparkles } from "lucide-react";
+import { Footer } from "@/components/Footer";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
@@ -44,6 +45,7 @@ function Dashboard() {
   });
 
   return (
+    <>
     <main className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10">
       {/* Hero */}
       <div className="text-center mb-10">
@@ -119,5 +121,7 @@ function Dashboard() {
         </div>
       )}
     </main>
+    <Footer />
+    </>
   );
 }

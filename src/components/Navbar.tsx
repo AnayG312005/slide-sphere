@@ -26,14 +26,9 @@ export function Navbar() {
           </nav>
           <div className="flex items-center gap-2 min-h-[40px]">
             {isLoaded && !isSignedIn && (
-              <>
-                <Link to="/sign-in" className="hidden sm:inline-flex text-sm px-4 py-2 rounded-full hover:bg-accent text-foreground">
-                  Sign in
-                </Link>
-                <Link to="/sign-up" className="inline-flex text-sm px-4 py-2 rounded-full bg-primary text-primary-foreground hover:opacity-90 shadow-glow">
-                  Get started
-                </Link>
-              </>
+              <Link to="/sign-up" className="inline-flex text-sm px-4 py-2 rounded-full bg-primary text-primary-foreground hover:opacity-90 shadow-glow">
+                Get started
+              </Link>
             )}
             {isLoaded && isSignedIn && (
               <>
