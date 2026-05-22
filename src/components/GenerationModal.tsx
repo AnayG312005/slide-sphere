@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Sparkles, Loader2, Wand2, Crown } from "lucide-react";
+import { X, Sparkles, Loader2, Wand2 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
 import { generateOutline, finalizeDeck } from "@/lib/generate.functions";
@@ -8,13 +8,13 @@ import { OutlineEditor, type OutlineSlide } from "./OutlineEditor";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
 
-const STYLES = [
+const STYLES: ReadonlyArray<{ id: string; name: string; desc: string }> = [
   { id: "modern-corporate", name: "Modern Corporate", desc: "Clean grids, restrained palette" },
   { id: "glassmorphism", name: "Glassmorphism", desc: "Frosted layers, soft glow" },
   { id: "minimal-clean", name: "Minimal Clean", desc: "Lots of whitespace, type-led" },
-  { id: "dark-futuristic", name: "Dark Futuristic", desc: "High contrast, neon accents", premium: true },
+  { id: "dark-futuristic", name: "Dark Futuristic", desc: "High contrast, neon accents" },
   { id: "startup-pitch", name: "Startup Pitch Deck", desc: "Bold callouts, metric-focused" },
-  { id: "creative-gradient", name: "Creative Gradient", desc: "Vibrant gradients, expressive", premium: true },
+  { id: "creative-gradient", name: "Creative Gradient", desc: "Vibrant gradients, expressive" },
 ] as const;
 
 const DENSITIES = [
@@ -23,7 +23,7 @@ const DENSITIES = [
   { id: "extensive", name: "Extensive", desc: "Full body + 4-6 bullets" },
 ] as const;
 
-type StyleId = typeof STYLES[number]["id"];
+type StyleId = string;
 type DensityId = typeof DENSITIES[number]["id"];
 
 interface Props {
@@ -73,16 +73,13 @@ export function GenerationModal({ open, onClose, initialPrompt, initialSlideCoun
     },
     onError: (e: Error) => {
       if (e.message.startsWith("INSUFFICIENT_CREDITS")) {
-        toast.error("Out of credits — upgrade to continue", { action: { label: "Upgrade", onClick: () => navigate({ to: "/pricing" }) }});
+        toast.error("Out of credits — wait for refill or contact support");
       } else { toast.error(e.message); }
       setStep("outline");
     },
   });
 
   const onStart = () => {
-    if (!isPremium && STYLES.find(s => s.id === style)?.premium) {
-      toast.error("This style is premium-only. Pick another or upgrade."); return;
-    }
     setStep("generating");
     outlineMut.mutate();
   };
@@ -128,7 +125,6 @@ export function GenerationModal({ open, onClose, initialPrompt, initialSlideCoun
                     <h3 className="text-sm font-medium text-ink mb-3">Presentation style</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                       {STYLES.map(s => {
-                        const locked = s.premium && !isPremium;
                         const active = style === s.id;
                         return (
                           <button
@@ -136,11 +132,10 @@ export function GenerationModal({ open, onClose, initialPrompt, initialSlideCoun
                             onClick={() => setStyle(s.id)}
                             className={`text-left p-3.5 rounded-2xl border transition relative ${
                               active ? "border-primary bg-primary/5 shadow-soft" : "border-border hover:border-primary/40"
-                            } ${locked ? "opacity-60" : ""}`}
+                            }`}
                           >
                             <div className="flex items-center gap-2 mb-1">
                               <span className="font-medium text-ink text-sm">{s.name}</span>
-                              {s.premium && <Crown className="w-3 h-3 text-primary" />}
                             </div>
                             <p className="text-xs text-muted-foreground">{s.desc}</p>
                           </button>
@@ -148,6 +143,7 @@ export function GenerationModal({ open, onClose, initialPrompt, initialSlideCoun
                       })}
                     </div>
                   </section>
+
 
                   <section>
                     <h3 className="text-sm font-medium text-ink mb-3">Content density</h3>
