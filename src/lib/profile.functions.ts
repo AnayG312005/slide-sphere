@@ -2,13 +2,19 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireUserId } from "./auth.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { currentUser } from "@clerk/tanstack-react-start/server";
+import { clerkClient } from "@clerk/tanstack-react-start/server";
 
 export const getMyProfile = createServerFn({ method: "GET" }).handler(async () => {
   const userId = await requireUserId();
-  const user = await currentUser();
-  const email = user?.emailAddresses?.[0]?.emailAddress ?? null;
-  const name = user?.firstName ?? user?.username ?? null;
+  let email: string | null = null;
+  let name: string | null = null;
+  try {
+    const user = await clerkClient().users.getUser(userId);
+    email = user.emailAddresses?.[0]?.emailAddress ?? null;
+    name = user.firstName ?? user.username ?? null;
+  } catch {
+    // Non-fatal — proceed with nulls
+  }
 
   const { data, error } = await supabaseAdmin.rpc("ensure_profile", {
     _clerk_user_id: userId,
