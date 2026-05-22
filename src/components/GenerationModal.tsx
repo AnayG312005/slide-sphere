@@ -73,7 +73,7 @@ export function GenerationModal({ open, onClose, initialPrompt, initialSlideCoun
     },
     onError: (e: Error) => {
       if (e.message.startsWith("INSUFFICIENT_CREDITS")) {
-        toast.error("Out of credits — upgrade to continue", { action: { label: "Upgrade", onClick: () => navigate({ to: "/pricing" }) }});
+        toast.error("Out of credits — wait for refill or contact support");
       } else { toast.error(e.message); }
       setStep("outline");
     },
