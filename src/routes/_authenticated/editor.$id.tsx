@@ -3,8 +3,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { getProject, updateSlide } from "@/lib/projects.functions";
-import { ChevronLeft, ChevronRight, Loader2, Save, ArrowLeft } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Save, ArrowLeft, Play } from "lucide-react";
 import { toast } from "sonner";
+import { SlidePreview, type PreviewSlide } from "@/components/SlidePreview";
 
 export const Route = createFileRoute("/_authenticated/editor/$id")({
   component: Editor,
@@ -19,6 +20,7 @@ type Slide = {
   body: string | null;
   bullets: string[] | null;
   notes: string | null;
+  image_url?: string | null;
 };
 
 function Editor() {
@@ -30,6 +32,7 @@ function Editor() {
     queryFn: () => fetchProject({ data: { id } }),
   });
   const [active, setActive] = useState(0);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [draft, setDraft] = useState<{ title: string; body: string; notes: string } | null>(null);
 
   const slides = (data?.slides ?? []) as Slide[];
@@ -72,14 +75,23 @@ function Editor() {
             <p className="text-xs text-muted-foreground">{slides.length} slides</p>
           </div>
         </div>
-        <button
-          onClick={() => saveMut.mutate()}
-          disabled={saveMut.isPending || !draft}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground shadow-glow hover:opacity-90 disabled:opacity-60 text-sm"
-        >
-          {saveMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-          Save
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setPreviewOpen(true)}
+            disabled={slides.length === 0}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border bg-card hover:bg-accent disabled:opacity-50 text-sm"
+          >
+            <Play className="w-4 h-4" /> Preview
+          </button>
+          <button
+            onClick={() => saveMut.mutate()}
+            disabled={saveMut.isPending || !draft}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground shadow-glow hover:opacity-90 disabled:opacity-60 text-sm"
+          >
+            {saveMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            Save
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr_320px] gap-5">
@@ -165,6 +177,14 @@ function Editor() {
           <p className="mt-3 text-xs text-muted-foreground">Notes are saved to this slide.</p>
         </aside>
       </div>
+
+      <SlidePreview
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        slides={slides as PreviewSlide[]}
+        deckTitle={data.project.title}
+        startIndex={active}
+      />
     </main>
   );
 }

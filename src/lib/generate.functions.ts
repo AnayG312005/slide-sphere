@@ -62,13 +62,27 @@ export const generateOutline = createServerFn({ method: "POST" })
   .inputValidator((d) => OutlineInput.parse(d))
   .handler(async ({ data }) => {
     await requireUserId();
-    const sys = `You are an elite presentation strategist. Generate a tight, narrative outline for a slide deck. Return ONLY the outline (titles + 1-line summaries). First slide layout="title". Last slide layout="closing".`;
-    const usr = `Topic: ${data.topic}
+    const sys = `You are an elite AI presentation strategist (Gamma / Beautiful.ai-class).
+Analyze the user's brief: extract topic, audience, tone, purpose, complexity, slide count.
+
+Then design a Gamma-style narrative arc using these story beats (skip/merge to fit the slide budget — never pad):
+1. Cover  2. Introduction  3. Problem Statement  4. Core Concepts  5. Detailed Sections
+6. Visual Examples / Case Studies  7. Challenges / Limitations  8. Future Scope
+9. Conclusion  10. Thank You
+
+Rules:
+- First slide layout="title" (cover). Last slide layout="closing" (thank you / takeaway).
+- Choose layout per slide content: "title", "content", "two-column" (compare/visual+text), "quote" (insight/statistic), "closing".
+- Titles <= 8 words, action-oriented, no generic "Overview".
+- Each summary is a single concrete sentence (<= 18 words) describing what the slide says — not what it is about.
+- Vary layouts; avoid 3 identical layouts in a row.
+- No duplicate titles. No filler ("Agenda", "Questions?") unless explicitly useful.`;
+    const usr = `Brief: ${data.topic}
 Audience: ${data.audience || "general professional audience"}
 Tone: ${data.tone}
-Style: ${data.style}
-Content density: ${data.density}
-Slides: ${data.slideCount}`;
+Visual style: ${data.style}
+Density: ${data.density}
+Target slides: ${data.slideCount}`;
 
     const schema = {
       type: "object",
@@ -131,13 +145,24 @@ export const finalizeDeck = createServerFn({ method: "POST" })
       throw new Error(`INSUFFICIENT_CREDITS: need ${CREDITS_PER_DECK}, have ${profile?.credits ?? 0}`);
     }
 
-    const densityHint = data.density === "minimal" ? "very sparse, max 2 short bullets" : data.density === "extensive" ? "rich body paragraphs + 4-6 bullets" : "concise body + 3-5 bullets";
-    const sys = `You are an elite presentation designer. For each outline slide, produce final content. ${densityHint}. Include an imageQuery (2-4 keywords) for fetching a stock photo. Return slides in the same order.`;
-    const usr = `Style: ${data.style}
+    const densityHint = data.density === "minimal"
+      ? "<= 2 short bullets (<= 6 words each), no body paragraph"
+      : data.density === "extensive"
+      ? "1 rich body paragraph (2-3 sentences) + 4-6 bullets (<= 12 words each)"
+      : "short body sentence + 3-5 bullets (<= 10 words each)";
+    const sys = `You are an elite presentation designer producing premium, Gamma-style decks.
+For each outline slide, write final content optimized for projection:
+- title: keep / lightly refine the outline title; <= 8 words.
+- body: ${densityHint}. Skip body entirely for layout="title" or "quote".
+- bullets: parallel grammar, concrete, no marketing fluff, no repetition across slides.
+- notes: 2-3 sentence speaker note expanding the slide.
+- imageQuery: 2-4 vivid semantic keywords for a stock photo that matches the slide's idea (NOT the deck topic). For title slide use hero-style keywords. For quote slide, atmospheric keywords. Never generic ("business", "technology") — be specific.
+Maintain narrative continuity, remove duplicate ideas, ensure each slide carries ONE clear takeaway. Return slides in the same order as the outline.`;
+    const usr = `Visual style: ${data.style}
 Tone: ${data.tone}
-Topic: ${data.topic}
+Deck topic: ${data.topic}
 
-Outline:
+Outline (preserve order, do NOT add or drop slides):
 ${data.slides.map((s, i) => `${i + 1}. [${s.layout}] ${s.title} — ${s.summary}`).join("\n")}
 
 Generate ${data.slides.length} fully-realized slides.`;
