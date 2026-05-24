@@ -224,7 +224,7 @@ Generate ${data.slides.length} fully-realized slides.`;
       bullets: s.bullets,
       notes: s.notes,
       image_url: imageUrls[i],
-      image_source: imageUrls[i] ? "unsplash" : null,
+      image_source: imageSources[i],
     }));
     const { error: sErr } = await supabaseAdmin.from("slides").insert(slideRows);
     if (sErr) throw new Error(sErr.message);
