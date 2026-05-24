@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireUserId } from "./auth.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { resolveSlideImage, inferStyleHint } from "./image-pipeline.server";
 
 const STYLES = ["modern-corporate", "glassmorphism", "minimal-clean", "dark-futuristic", "startup-pitch", "creative-gradient"] as const;
 const DENSITIES = ["minimal", "concise", "extensive"] as const;
@@ -190,31 +191,15 @@ Generate ${data.slides.length} fully-realized slides.`;
 
     const parsed = FullDeck.parse(await callGemini(sys, usr, schema, "emit_full_deck"));
 
-    // Fetch images via Unsplash (best-effort; optional)
-    const unsplashKey = process.env.UNSPLASH_ACCESS_KEY;
-    const imageUrls: (string | null)[] = await Promise.all(
-      parsed.slides.map(async (s) => {
-        const query = (s.imageQuery || s.title).trim();
-        if (!query || !unsplashKey) return null;
-        try {
-          const r = await fetch(`https://api.unsplash.com/search/photos?per_page=1&orientation=landscape&query=${encodeURIComponent(query)}`, {
-            headers: { Authorization: `Client-ID ${unsplashKey}` },
-          });
-          if (!r.ok) return null;
-          const j = await r.json();
-          const url = j.results?.[0]?.urls?.regular as string | undefined;
-          if (!url) return null;
-          // Optional ImageKit CDN passthrough
-          const ikEndpoint = process.env.IMAGEKIT_URL_ENDPOINT;
-          if (ikEndpoint) {
-            return `${ikEndpoint.replace(/\/$/, "")}/tr:w-1600,q-80/${encodeURIComponent(url)}`;
-          }
-          return url;
-        } catch {
-          return null;
-        }
-      })
+    // Hybrid image pipeline: Unsplash → Pexels → null, with ImageKit CDN passthrough.
+    const styleHint = inferStyleHint(data.topic, data.tone);
+    const resolved = await Promise.all(
+      parsed.slides.map((s) =>
+        resolveSlideImage({ query: (s.imageQuery || s.title || "").trim(), styleHint })
+      )
     );
+    const imageUrls = resolved.map((r) => r.url);
+    const imageSources = resolved.map((r) => r.source);
 
     // Persist project + slides
     const { data: project, error: pErr } = await supabaseAdmin
@@ -239,7 +224,7 @@ Generate ${data.slides.length} fully-realized slides.`;
       bullets: s.bullets,
       notes: s.notes,
       image_url: imageUrls[i],
-      image_source: imageUrls[i] ? "unsplash" : null,
+      image_source: imageSources[i],
     }));
     const { error: sErr } = await supabaseAdmin.from("slides").insert(slideRows);
     if (sErr) throw new Error(sErr.message);

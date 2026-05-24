@@ -9,6 +9,24 @@ export type ExportSlide = {
   image_url?: string | null;
 };
 
+/** Fetch a remote image and return a data URL (base64). PowerPoint/LibreOffice
+ *  render embedded base64 reliably; raw URLs sometimes fail in exported files. */
+async function urlToDataUrl(url: string): Promise<string | null> {
+  try {
+    const r = await fetch(url, { mode: "cors" });
+    if (!r.ok) return null;
+    const blob = await r.blob();
+    return await new Promise((resolve) => {
+      const fr = new FileReader();
+      fr.onload = () => resolve(typeof fr.result === "string" ? fr.result : null);
+      fr.onerror = () => resolve(null);
+      fr.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
+
 export async function exportDeckToPptx(deckTitle: string, slides: ExportSlide[]) {
   const pptx = new PptxGenJS();
   pptx.layout = "LAYOUT_WIDE";
@@ -19,7 +37,14 @@ export async function exportDeckToPptx(deckTitle: string, slides: ExportSlide[])
   const muted = "8A7363";
   const cream = "FAF7F1";
 
-  for (const s of slides) {
+  // Resolve all images to base64 in parallel before building the deck.
+  const dataUrls = await Promise.all(
+    slides.map((s) => (s.image_url ? urlToDataUrl(s.image_url) : Promise.resolve(null)))
+  );
+
+  for (let idx = 0; idx < slides.length; idx++) {
+    const s = slides[idx];
+    const dataUrl = dataUrls[idx];
     const slide = pptx.addSlide();
     slide.background = { color: cream };
 
@@ -35,20 +60,20 @@ export async function exportDeckToPptx(deckTitle: string, slides: ExportSlide[])
       slide.addText(`"${s.body || s.title || ""}"`, { x: 1, y: 2.5, w: 11.3, h: 3, fontSize: 36, fontFace: "Georgia", color: ink, italic: true, align: "center" });
       slide.addShape("line", { x: 6.16, y: 5.6, w: 1, h: 0, line: { color: accent, width: 2 } });
     } else {
-      const hasImage = !!s.image_url;
+      const hasImage = !!dataUrl;
       const textW = hasImage ? 6.6 : 12;
-      slide.addText(s.title || "Untitled", { x: 0.6, y: 0.6, w: textW, h: 1.2, fontSize: 36, fontFace: "Georgia", color: ink, bold: false, italic: true });
+      slide.addText(s.title || "Untitled", { x: 0.6, y: 0.6, w: textW, h: 1.2, fontSize: 36, fontFace: "Georgia", color: ink, italic: true });
       if (s.body) {
         slide.addText(s.body, { x: 0.6, y: 1.9, w: textW, h: 1.6, fontSize: 16, color: muted, fontFace: "Calibri" });
       }
       if (s.bullets && s.bullets.length) {
         slide.addText(
-          s.bullets.map(b => ({ text: b, options: { bullet: { code: "25CF" }, color: ink } })),
+          s.bullets.map((b) => ({ text: b, options: { bullet: { code: "25CF" }, color: ink } })),
           { x: 0.6, y: 3.4, w: textW, h: 3.6, fontSize: 16, fontFace: "Calibri", paraSpaceAfter: 8 }
         );
       }
-      if (hasImage && s.image_url) {
-        slide.addImage({ path: s.image_url, x: 7.5, y: 0.6, w: 5.2, h: 6.3, sizing: { type: "cover", w: 5.2, h: 6.3 } });
+      if (hasImage && dataUrl) {
+        slide.addImage({ data: dataUrl, x: 7.5, y: 0.6, w: 5.2, h: 6.3, sizing: { type: "cover", w: 5.2, h: 6.3 } });
       }
     }
     if (s.notes) slide.addNotes(s.notes);
