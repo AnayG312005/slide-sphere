@@ -17,6 +17,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 function Dashboard() {
   const fetchProjects = useServerFn(listProjects);
   const del = useServerFn(deleteProject);
+  const { user } = useUser();
   const router = useRouter();
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["projects"],
