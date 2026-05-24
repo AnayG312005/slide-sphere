@@ -1,6 +1,7 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useUser } from "@clerk/tanstack-react-start";
 import { listProjects, deleteProject } from "@/lib/projects.functions";
 import { PromptComposer } from "@/components/PromptComposer";
 import { FileText, Trash2, Loader2, Sparkles } from "lucide-react";
