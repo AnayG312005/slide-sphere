@@ -1,11 +1,8 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useEffect } from "react";
-import { useUser } from "@clerk/tanstack-react-start";
 import { listProjects, deleteProject } from "@/lib/projects.functions";
 import { PromptComposer } from "@/components/PromptComposer";
-import { supabase } from "@/integrations/supabase/client";
 import { FileText, Trash2, Loader2, Sparkles } from "lucide-react";
 import { Footer } from "@/components/Footer";
 import { toast } from "sonner";
@@ -20,23 +17,12 @@ function Dashboard() {
   const fetchProjects = useServerFn(listProjects);
   const del = useServerFn(deleteProject);
   const router = useRouter();
-  const { user } = useUser();
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["projects"],
     queryFn: () => fetchProjects(),
+    refetchOnWindowFocus: true,
+    refetchInterval: 30_000,
   });
-
-  // Realtime subscription — refresh when projects change
-  useEffect(() => {
-    if (!user?.id) return;
-    const channel = supabase
-      .channel(`projects-${user.id}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "projects" }, () => {
-        refetch();
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [user?.id, refetch]);
 
   const delMut = useMutation({
     mutationFn: (id: string) => del({ data: { id } }),
