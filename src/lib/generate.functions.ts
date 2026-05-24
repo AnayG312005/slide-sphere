@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireUserId } from "./auth.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { resolveSlideImage, inferStyleHint } from "./image-pipeline.server";
 
 const STYLES = ["modern-corporate", "glassmorphism", "minimal-clean", "dark-futuristic", "startup-pitch", "creative-gradient"] as const;
 const DENSITIES = ["minimal", "concise", "extensive"] as const;
