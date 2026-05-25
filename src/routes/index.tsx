@@ -12,8 +12,8 @@ export const Route = createFileRoute("/")({
   component: Landing,
   head: () => ({
     meta: [
-      { title: "Lumen — AI slide decks from a single prompt" },
-      { name: "description", content: "Turn ideas into beautiful presentations in seconds. Lumen generates polished, on-brand slide decks powered by AI." },
+      { title: "Slide Sphere — AI slide decks from a single prompt" },
+      { name: "description", content: "Turn ideas into beautiful presentations in seconds. Slide Sphere generates polished, on-brand slide decks powered by AI." },
     ],
   }),
 });
@@ -43,7 +43,7 @@ function Landing() {
             <br />generated in one prompt.
           </h1>
           <p className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto">
-            Describe your idea, attach a document, choose your length. Lumen does the rest.
+            Describe your idea, attach a document, choose your length. Slide Sphere does the rest.
           </p>
         </div>
       </section>
@@ -76,7 +76,7 @@ function Landing() {
             <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between text-white">
               <div>
                 <div className="text-xs uppercase tracking-widest text-white/70">Live preview</div>
-                <div className="font-display text-2xl sm:text-3xl">Watch Lumen design a deck in real-time</div>
+                <div className="font-display text-2xl sm:text-3xl">Watch Slide Sphere design a deck in real-time</div>
               </div>
             </div>
           </div>
@@ -146,12 +146,12 @@ function Landing() {
         <div className="mx-auto max-w-6xl">
           <div className="text-center mb-14">
             <h2 className="font-display text-4xl sm:text-5xl text-ink">Loved by makers everywhere</h2>
-            <p className="mt-3 text-muted-foreground">A few words from people shipping with Lumen.</p>
+            <p className="mt-3 text-muted-foreground">A few words from people shipping with Slide Sphere.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {[
               { name: "Sarah Chen", role: "Founder, Northwind", avatar: "https://i.pravatar.cc/100?img=47", quote: "I built our entire seed pitch in 12 minutes. Investors thought we hired a design studio." },
-              { name: "Marcus Diallo", role: "Professor, MIT", avatar: "https://i.pravatar.cc/100?img=12", quote: "Lumen turned my course notes into beautiful lecture decks. My students actually look up now." },
+              { name: "Marcus Diallo", role: "Professor, MIT", avatar: "https://i.pravatar.cc/100?img=12", quote: "Slide Sphere turned my course notes into beautiful lecture decks. My students actually look up now." },
               { name: "Priya Raman", role: "PM, Globex", avatar: "https://i.pravatar.cc/100?img=32", quote: "Quarterly reviews used to eat my weekend. Now I prompt, polish, and present. Magic." },
               { name: "Tom Becker", role: "Indie hacker", avatar: "https://i.pravatar.cc/100?img=15", quote: "The typography alone is worth the price. Feels like Apple keynote, runs in a browser." },
               { name: "Aisha Khan", role: "Sales lead, Acme", avatar: "https://i.pravatar.cc/100?img=38", quote: "I generate a custom pitch for every prospect now. Close rate is up 28%." },

@@ -5,7 +5,7 @@ import { Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/sign-in")({
   component: SignInPage,
-  head: () => ({ meta: [{ title: "Sign in — Lumen" }] }),
+  head: () => ({ meta: [{ title: "Sign in — Slide Sphere" }] }),
 });
 
 function SignInPage() {
@@ -16,7 +16,7 @@ function SignInPage() {
           <div className="grid place-items-center w-9 h-9 rounded-full gradient-ember shadow-glow">
             <Sparkles className="w-4 h-4 text-white" />
           </div>
-          <span className="font-display text-2xl text-ink">Lumen</span>
+          <span className="font-display text-2xl text-ink">Slide Sphere</span>
         </Link>
         <SignIn signUpUrl="/sign-up" forceRedirectUrl="/dashboard" />
       </div>
