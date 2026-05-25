@@ -9,7 +9,7 @@ import { SlidePreview, type PreviewSlide } from "@/components/SlidePreview";
 
 export const Route = createFileRoute("/_authenticated/editor/$id")({
   component: Editor,
-  head: () => ({ meta: [{ title: "Editor — Lumen" }] }),
+  head: () => ({ meta: [{ title: "Editor — Slide Sphere" }] }),
 });
 
 type Slide = {
