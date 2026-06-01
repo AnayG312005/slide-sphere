@@ -77,6 +77,12 @@ export async function exportDeckToPptx(deckTitle: string, slides: ExportSlide[])
       }
     }
     if (s.notes) slide.addNotes(s.notes);
+    // Slide Sphere watermark — bottom-right of every slide.
+    slide.addText("Slide Sphere", {
+      x: 11.4, y: 7.15, w: 1.8, h: 0.25,
+      fontSize: 8, fontFace: "Calibri", color: muted, align: "right",
+      charSpacing: 4,
+    });
   }
 
   await pptx.writeFile({ fileName: `${deckTitle.replace(/[^a-z0-9\-_ ]/gi, "").slice(0, 80) || "deck"}.pptx` });

@@ -85,9 +85,17 @@ function Dashboard() {
               className="group rounded-2xl border bg-card p-5 hover:shadow-soft hover:-translate-y-0.5 transition cursor-pointer animate-fade-in"
               onClick={() => router.navigate({ to: "/editor/$id", params: { id: p.id } })}
             >
-              <div className="aspect-video rounded-xl gradient-ember mb-4 p-4 flex flex-col justify-end shadow-glow">
-                <div className="text-[10px] uppercase tracking-widest text-white/70">Deck</div>
-                <div className="font-display text-white text-lg leading-tight line-clamp-2">{p.title}</div>
+              <div className="aspect-video rounded-xl mb-4 overflow-hidden relative shadow-soft ring-1 ring-border/60">
+                {p.cover_image_url ? (
+                  <img src={p.cover_image_url} alt={p.title} className="absolute inset-0 w-full h-full object-cover" />
+                ) : (
+                  <div className="absolute inset-0 gradient-ember" />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 p-4">
+                  <div className="text-[10px] uppercase tracking-widest text-white/80">Deck</div>
+                  <div className="font-display text-white text-lg leading-tight line-clamp-2">{p.title}</div>
+                </div>
               </div>
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
