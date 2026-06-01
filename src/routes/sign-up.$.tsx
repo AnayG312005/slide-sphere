@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { SignUp } from "@clerk/tanstack-react-start";
 import { Sparkles, Wand2, Layers, ShieldCheck, Zap, Star } from "lucide-react";
 
-export const Route = createFileRoute("/sign-up")({
+export const Route = createFileRoute("/sign-up/$")({
   component: SignUpPage,
   head: () => ({ meta: [{ title: "Sign up — Slide Sphere" }] }),
 });
@@ -109,6 +109,8 @@ function SignUpPage() {
             </div>
             <div className="flex justify-center">
               <SignUp
+                path="/sign-up"
+                routing="path"
                 signInUrl="/sign-in"
                 forceRedirectUrl="/dashboard"
                 appearance={{

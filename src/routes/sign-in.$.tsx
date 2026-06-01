@@ -3,7 +3,7 @@ import { SignIn } from "@clerk/tanstack-react-start";
 import { Link } from "@tanstack/react-router";
 import { Sparkles } from "lucide-react";
 
-export const Route = createFileRoute("/sign-in")({
+export const Route = createFileRoute("/sign-in/$")({
   component: SignInPage,
   head: () => ({ meta: [{ title: "Sign in — Slide Sphere" }] }),
 });
@@ -18,7 +18,7 @@ function SignInPage() {
           </div>
           <span className="font-display text-2xl text-ink">Slide Sphere</span>
         </Link>
-        <SignIn signUpUrl="/sign-up" forceRedirectUrl="/dashboard" />
+        <SignIn path="/sign-in" routing="path" signUpUrl="/sign-up" forceRedirectUrl="/dashboard" />
       </div>
     </div>
   );
