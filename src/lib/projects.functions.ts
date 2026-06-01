@@ -11,7 +11,18 @@ export const listProjects = createServerFn({ method: "GET" }).handler(async () =
     .eq("clerk_user_id", userId)
     .order("updated_at", { ascending: false });
   if (error) throw new Error(error.message);
-  return { projects: data ?? [] };
+  const ids = (data ?? []).map((p) => p.id);
+  let covers: Record<string, string | null> = {};
+  if (ids.length > 0) {
+    const { data: slideRows } = await supabaseAdmin
+      .from("slides")
+      .select("project_id,image_url,position")
+      .in("project_id", ids)
+      .eq("position", 0);
+    covers = Object.fromEntries((slideRows ?? []).map((s) => [s.project_id, s.image_url ?? null]));
+  }
+  const projects = (data ?? []).map((p) => ({ ...p, cover_image_url: covers[p.id] ?? null }));
+  return { projects };
 });
 
 export const getProject = createServerFn({ method: "POST" })
