@@ -18,7 +18,7 @@ function SignInPage() {
           </div>
           <span className="font-display text-2xl text-ink">Slide Sphere</span>
         </Link>
-        <SignIn signUpUrl="/sign-up" forceRedirectUrl="/dashboard" />
+        <SignIn path="/sign-in" routing="path" signUpUrl="/sign-up" forceRedirectUrl="/dashboard" />
       </div>
     </div>
   );
