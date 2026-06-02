@@ -142,7 +142,7 @@ function SlideCanvas({ slide, deckTitle, index, total }: { slide: PreviewSlide; 
         </div>
       )}
       <div className={`relative h-full p-10 sm:p-14 flex flex-col justify-center gap-6 ${hasImage ? "max-w-[62%]" : ""}`}>
-        <div className="text-xs uppercase tracking-widest text-primary">Slide {index + 1}</div>
+        {/* metadata label removed for cleaner presentation */}
         <Title size="md" />
         <Body />
         <Bullets />
