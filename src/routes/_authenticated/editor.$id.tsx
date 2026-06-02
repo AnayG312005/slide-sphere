@@ -3,7 +3,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useRef } from "react";
 import { getProject, updateSlide } from "@/lib/projects.functions";
-import { Loader2, Save, ArrowLeft, Play } from "lucide-react";
+import { exportDeckToPptx } from "@/lib/pptx-export";
+import { Loader2, Save, ArrowLeft, Play, Download } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { SlidePreview, type PreviewSlide } from "@/components/SlidePreview";
@@ -37,6 +38,9 @@ function Editor() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [railOpen, setRailOpen] = useState(false);
   const [draft, setDraft] = useState<{ title: string; body: string } | null>(null);
+  const [dirty, setDirty] = useState(false);
+  const [savedOnce, setSavedOnce] = useState(true); // existing deck loaded from DB is considered saved
+  const [downloading, setDownloading] = useState(false);
   const stageRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
 
@@ -49,8 +53,10 @@ function Editor() {
         title: current.title ?? "",
         body: current.body ?? "",
       });
+      setDirty(false);
     }
   }, [current?.id]);
+
 
   // Auto-scale slide canvas to fit available stage area (16:9).
   useEffect(() => {
@@ -76,11 +82,40 @@ function Editor() {
     mutationFn: () => save({ data: { id: current!.id, ...draft! } }),
     onSuccess: () => {
       toast.success("Saved");
+      setDirty(false);
+      setSavedOnce(true);
       refetch();
       qc.invalidateQueries({ queryKey: ["projects"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const handleDownload = async () => {
+    if (dirty || !savedOnce) {
+      toast.error("Please save your presentation before downloading.");
+      return;
+    }
+    if (!data || slides.length === 0) return;
+    try {
+      setDownloading(true);
+      await exportDeckToPptx(
+        data.project.title,
+        slides.map((s) => ({
+          title: s.title,
+          body: s.body,
+          bullets: s.bullets,
+          notes: s.notes,
+          layout: s.layout,
+          image_url: s.image_url ?? null,
+        }))
+      );
+      toast.success("Presentation downloaded successfully.");
+    } catch (e) {
+      toast.error((e as Error).message || "Download failed");
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   // Keyboard arrows
   useEffect(() => {
@@ -132,11 +167,20 @@ function Editor() {
           </button>
           <button
             onClick={() => saveMut.mutate()}
-            disabled={saveMut.isPending || !draft}
+            disabled={saveMut.isPending || !draft || !dirty}
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary text-primary-foreground shadow-glow hover:opacity-90 disabled:opacity-60 text-sm transition active:scale-95"
           >
             {saveMut.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-            Save
+            {dirty ? "Save" : "Saved"}
+          </button>
+          <button
+            onClick={handleDownload}
+            disabled={downloading || slides.length === 0}
+            title={dirty || !savedOnce ? "Save before downloading" : "Download as .pptx"}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border bg-card hover:bg-accent disabled:opacity-50 text-sm transition"
+          >
+            {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+            Download
           </button>
         </div>
       </header>
@@ -222,9 +266,9 @@ function Editor() {
                   <SlideCanvasEditable
                     slide={current}
                     draft={draft}
-                    onDraft={setDraft}
-                    index={active}
+                    onDraft={(d) => { setDraft(d); setDirty(true); }}
                   />
+
                 </div>
               </motion.div>
             </AnimatePresence>
@@ -266,48 +310,56 @@ function Editor() {
   );
 }
 
-/** Editable canvas — mirrors SlidePreview look, with editable title/body. */
+/** Editable canvas — mirrors SlidePreview look, with editable title/body.
+ *  Adaptive typography ensures content fits the 1600x900 canvas — no scroll. */
 function SlideCanvasEditable({
   slide,
   draft,
   onDraft,
-  index,
 }: {
   slide: Slide;
   draft: { title: string; body: string };
   onDraft: (d: { title: string; body: string }) => void;
-  index: number;
 }) {
   const hasImage = !!slide.image_url;
   const bullets = slide.bullets ?? [];
 
+  // Density-aware sizing so everything fits without scrolling.
+  const bodyLen = draft.body.length;
+  const total = bodyLen + bullets.reduce((a, b) => a + b.length, 0) + bullets.length * 20;
+  const tight = total > 600 || bullets.length > 5;
+  const titleCls = tight ? "text-5xl" : "text-6xl";
+  const bodyCls = tight ? "text-lg" : "text-xl";
+  const bulletCls = tight ? "text-base" : "text-lg";
+  const gapCls = tight ? "gap-5" : "gap-8";
+  const padCls = tight ? "p-14" : "p-20";
+
   return (
-    <div className="relative w-full h-full bg-card">
+    <div className="relative w-full h-full bg-card overflow-hidden">
       {hasImage && (
         <div className="absolute right-0 top-0 bottom-0 w-2/5">
           <img src={slide.image_url!} alt="" className="absolute inset-0 w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-l from-transparent via-card/20 to-card" />
         </div>
       )}
-      <div className={`relative h-full p-20 flex flex-col justify-center gap-8 ${hasImage ? "max-w-[62%]" : ""}`}>
-        <div className="text-xs uppercase tracking-[0.25em] text-primary">Slide {index + 1} · {slide.layout}</div>
+      <div className={`relative h-full ${padCls} flex flex-col justify-center ${gapCls} ${hasImage ? "max-w-[62%]" : ""}`}>
         <input
           value={draft.title}
           onChange={(e) => onDraft({ ...draft, title: e.target.value })}
-          className="w-full bg-transparent font-display text-6xl text-ink leading-[1.05] tracking-tight focus:outline-none focus:bg-primary/5 rounded-lg -mx-2 px-2"
+          className={`w-full bg-transparent font-display ${titleCls} text-ink leading-[1.05] tracking-tight focus:outline-none focus:bg-primary/5 rounded-lg -mx-2 px-2`}
           placeholder="Slide title"
         />
         <textarea
           value={draft.body}
           onChange={(e) => onDraft({ ...draft, body: e.target.value })}
-          rows={3}
-          className="w-full bg-transparent text-xl text-muted-foreground leading-relaxed resize-none focus:outline-none focus:bg-primary/5 rounded-lg -mx-2 px-2"
+          rows={tight ? 2 : 3}
+          className={`w-full bg-transparent ${bodyCls} text-muted-foreground leading-relaxed resize-none focus:outline-none focus:bg-primary/5 rounded-lg -mx-2 px-2 overflow-hidden`}
           placeholder="Body content…"
         />
         {bullets.length > 0 && (
-          <ul className="space-y-3 max-w-3xl">
+          <ul className={`${tight ? "space-y-2" : "space-y-3"} max-w-3xl`}>
             {bullets.map((b, i) => (
-              <li key={i} className="flex gap-3 text-lg text-foreground">
+              <li key={i} className={`flex gap-3 ${bulletCls} text-foreground`}>
                 <span className="mt-1.5 w-6 h-6 shrink-0 rounded-full bg-primary/15 text-primary grid place-items-center text-xs font-semibold">{i + 1}</span>
                 <span>{b}</span>
               </li>
@@ -315,10 +367,11 @@ function SlideCanvasEditable({
           </ul>
         )}
       </div>
-      {/* Watermark */}
-      <div className="absolute bottom-5 right-6 text-[11px] uppercase tracking-[0.2em] text-muted-foreground/60 font-medium">
+      {/* Watermark — clearly visible, sits above content */}
+      <div className="absolute bottom-6 right-8 z-10 text-[13px] uppercase tracking-[0.28em] font-semibold text-primary/70 select-none pointer-events-none">
         Slide Sphere
       </div>
     </div>
   );
 }
+

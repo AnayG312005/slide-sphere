@@ -47,10 +47,17 @@ function SlideCanvas({ slide, deckTitle, index, total }: { slide: PreviewSlide; 
   ) : null;
 
   const Footer = () => (
-    <div className="absolute bottom-6 left-10 right-10 flex items-center justify-between text-xs uppercase tracking-widest text-muted-foreground">
-      <span className="truncate max-w-[60%]">{deckTitle}</span>
-      <span>{index + 1} / {total}</span>
-    </div>
+    <>
+      <div className="absolute bottom-6 left-10 text-[11px] uppercase tracking-widest text-muted-foreground truncate max-w-[50%]">
+        {deckTitle}
+      </div>
+      <div className="absolute bottom-6 right-10 text-[11px] uppercase tracking-[0.28em] font-semibold text-primary/75 select-none">
+        Slide Sphere
+      </div>
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-[11px] tabular-nums text-muted-foreground">
+        {index + 1} / {total}
+      </div>
+    </>
   );
 
   // Title slide
@@ -111,7 +118,7 @@ function SlideCanvas({ slide, deckTitle, index, total }: { slide: PreviewSlide; 
     return (
       <div className="relative w-full h-full overflow-hidden bg-card grid grid-cols-2">
         <div className="p-10 sm:p-14 flex flex-col justify-center gap-6 overflow-hidden">
-          <div className="text-xs uppercase tracking-widest text-primary">Slide {index + 1}</div>
+          {/* metadata label removed for cleaner presentation */}
           <Title size="md" />
           <Body />
           <Bullets />
@@ -135,7 +142,7 @@ function SlideCanvas({ slide, deckTitle, index, total }: { slide: PreviewSlide; 
         </div>
       )}
       <div className={`relative h-full p-10 sm:p-14 flex flex-col justify-center gap-6 ${hasImage ? "max-w-[62%]" : ""}`}>
-        <div className="text-xs uppercase tracking-widest text-primary">Slide {index + 1}</div>
+        {/* metadata label removed for cleaner presentation */}
         <Title size="md" />
         <Body />
         <Bullets />
