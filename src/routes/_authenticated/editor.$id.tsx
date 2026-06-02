@@ -266,9 +266,9 @@ function Editor() {
                   <SlideCanvasEditable
                     slide={current}
                     draft={draft}
-                    onDraft={setDraft}
-                    index={active}
+                    onDraft={(d) => { setDraft(d); setDirty(true); }}
                   />
+
                 </div>
               </motion.div>
             </AnimatePresence>
