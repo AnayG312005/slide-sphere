@@ -310,48 +310,56 @@ function Editor() {
   );
 }
 
-/** Editable canvas — mirrors SlidePreview look, with editable title/body. */
+/** Editable canvas — mirrors SlidePreview look, with editable title/body.
+ *  Adaptive typography ensures content fits the 1600x900 canvas — no scroll. */
 function SlideCanvasEditable({
   slide,
   draft,
   onDraft,
-  index,
 }: {
   slide: Slide;
   draft: { title: string; body: string };
   onDraft: (d: { title: string; body: string }) => void;
-  index: number;
 }) {
   const hasImage = !!slide.image_url;
   const bullets = slide.bullets ?? [];
 
+  // Density-aware sizing so everything fits without scrolling.
+  const bodyLen = draft.body.length;
+  const total = bodyLen + bullets.reduce((a, b) => a + b.length, 0) + bullets.length * 20;
+  const tight = total > 600 || bullets.length > 5;
+  const titleCls = tight ? "text-5xl" : "text-6xl";
+  const bodyCls = tight ? "text-lg" : "text-xl";
+  const bulletCls = tight ? "text-base" : "text-lg";
+  const gapCls = tight ? "gap-5" : "gap-8";
+  const padCls = tight ? "p-14" : "p-20";
+
   return (
-    <div className="relative w-full h-full bg-card">
+    <div className="relative w-full h-full bg-card overflow-hidden">
       {hasImage && (
         <div className="absolute right-0 top-0 bottom-0 w-2/5">
           <img src={slide.image_url!} alt="" className="absolute inset-0 w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-l from-transparent via-card/20 to-card" />
         </div>
       )}
-      <div className={`relative h-full p-20 flex flex-col justify-center gap-8 ${hasImage ? "max-w-[62%]" : ""}`}>
-        <div className="text-xs uppercase tracking-[0.25em] text-primary">Slide {index + 1} · {slide.layout}</div>
+      <div className={`relative h-full ${padCls} flex flex-col justify-center ${gapCls} ${hasImage ? "max-w-[62%]" : ""}`}>
         <input
           value={draft.title}
           onChange={(e) => onDraft({ ...draft, title: e.target.value })}
-          className="w-full bg-transparent font-display text-6xl text-ink leading-[1.05] tracking-tight focus:outline-none focus:bg-primary/5 rounded-lg -mx-2 px-2"
+          className={`w-full bg-transparent font-display ${titleCls} text-ink leading-[1.05] tracking-tight focus:outline-none focus:bg-primary/5 rounded-lg -mx-2 px-2`}
           placeholder="Slide title"
         />
         <textarea
           value={draft.body}
           onChange={(e) => onDraft({ ...draft, body: e.target.value })}
-          rows={3}
-          className="w-full bg-transparent text-xl text-muted-foreground leading-relaxed resize-none focus:outline-none focus:bg-primary/5 rounded-lg -mx-2 px-2"
+          rows={tight ? 2 : 3}
+          className={`w-full bg-transparent ${bodyCls} text-muted-foreground leading-relaxed resize-none focus:outline-none focus:bg-primary/5 rounded-lg -mx-2 px-2 overflow-hidden`}
           placeholder="Body content…"
         />
         {bullets.length > 0 && (
-          <ul className="space-y-3 max-w-3xl">
+          <ul className={`${tight ? "space-y-2" : "space-y-3"} max-w-3xl`}>
             {bullets.map((b, i) => (
-              <li key={i} className="flex gap-3 text-lg text-foreground">
+              <li key={i} className={`flex gap-3 ${bulletCls} text-foreground`}>
                 <span className="mt-1.5 w-6 h-6 shrink-0 rounded-full bg-primary/15 text-primary grid place-items-center text-xs font-semibold">{i + 1}</span>
                 <span>{b}</span>
               </li>
@@ -359,10 +367,11 @@ function SlideCanvasEditable({
           </ul>
         )}
       </div>
-      {/* Watermark */}
-      <div className="absolute bottom-5 right-6 text-[11px] uppercase tracking-[0.2em] text-muted-foreground/60 font-medium">
+      {/* Watermark — clearly visible, sits above content */}
+      <div className="absolute bottom-6 right-8 z-10 text-[13px] uppercase tracking-[0.28em] font-semibold text-primary/70 select-none pointer-events-none">
         Slide Sphere
       </div>
     </div>
   );
 }
+
