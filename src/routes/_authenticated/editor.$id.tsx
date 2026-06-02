@@ -82,11 +82,40 @@ function Editor() {
     mutationFn: () => save({ data: { id: current!.id, ...draft! } }),
     onSuccess: () => {
       toast.success("Saved");
+      setDirty(false);
+      setSavedOnce(true);
       refetch();
       qc.invalidateQueries({ queryKey: ["projects"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const handleDownload = async () => {
+    if (dirty || !savedOnce) {
+      toast.error("Please save your presentation before downloading.");
+      return;
+    }
+    if (!data || slides.length === 0) return;
+    try {
+      setDownloading(true);
+      await exportDeckToPptx(
+        data.project.title,
+        slides.map((s) => ({
+          title: s.title,
+          body: s.body,
+          bullets: s.bullets,
+          notes: s.notes,
+          layout: s.layout,
+          image_url: s.image_url ?? null,
+        }))
+      );
+      toast.success("Presentation downloaded successfully.");
+    } catch (e) {
+      toast.error((e as Error).message || "Download failed");
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   // Keyboard arrows
   useEffect(() => {
