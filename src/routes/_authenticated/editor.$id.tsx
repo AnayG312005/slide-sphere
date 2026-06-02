@@ -39,7 +39,7 @@ function Editor() {
   const [railOpen, setRailOpen] = useState(false);
   const [draft, setDraft] = useState<{ title: string; body: string } | null>(null);
   const [dirty, setDirty] = useState(false);
-  const [savedOnce, setSavedOnce] = useState(false);
+  const [savedOnce, setSavedOnce] = useState(true); // existing deck loaded from DB is considered saved
   const [downloading, setDownloading] = useState(false);
   const stageRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
