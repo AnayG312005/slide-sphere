@@ -167,11 +167,20 @@ function Editor() {
           </button>
           <button
             onClick={() => saveMut.mutate()}
-            disabled={saveMut.isPending || !draft}
+            disabled={saveMut.isPending || !draft || !dirty}
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary text-primary-foreground shadow-glow hover:opacity-90 disabled:opacity-60 text-sm transition active:scale-95"
           >
             {saveMut.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-            Save
+            {dirty ? "Save" : "Saved"}
+          </button>
+          <button
+            onClick={handleDownload}
+            disabled={downloading || slides.length === 0}
+            title={dirty || !savedOnce ? "Save before downloading" : "Download as .pptx"}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border bg-card hover:bg-accent disabled:opacity-50 text-sm transition"
+          >
+            {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+            Download
           </button>
         </div>
       </header>
