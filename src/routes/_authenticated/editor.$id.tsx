@@ -56,13 +56,7 @@ function Editor() {
       setDirty(false);
     }
   }, [current?.id]);
-    if (current) {
-      setDraft({
-        title: current.title ?? "",
-        body: current.body ?? "",
-      });
-    }
-  }, [current?.id]);
+
 
   // Auto-scale slide canvas to fit available stage area (16:9).
   useEffect(() => {
