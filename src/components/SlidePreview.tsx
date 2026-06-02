@@ -118,7 +118,7 @@ function SlideCanvas({ slide, deckTitle, index, total }: { slide: PreviewSlide; 
     return (
       <div className="relative w-full h-full overflow-hidden bg-card grid grid-cols-2">
         <div className="p-10 sm:p-14 flex flex-col justify-center gap-6 overflow-hidden">
-          <div className="text-xs uppercase tracking-widest text-primary">Slide {index + 1}</div>
+          {/* metadata label removed for cleaner presentation */}
           <Title size="md" />
           <Body />
           <Bullets />
