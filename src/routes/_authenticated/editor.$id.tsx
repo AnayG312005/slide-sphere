@@ -38,6 +38,9 @@ function Editor() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [railOpen, setRailOpen] = useState(false);
   const [draft, setDraft] = useState<{ title: string; body: string } | null>(null);
+  const [dirty, setDirty] = useState(false);
+  const [savedOnce, setSavedOnce] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const stageRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
 
@@ -45,6 +48,14 @@ function Editor() {
   const current = slides[active];
 
   useEffect(() => {
+    if (current) {
+      setDraft({
+        title: current.title ?? "",
+        body: current.body ?? "",
+      });
+      setDirty(false);
+    }
+  }, [current?.id]);
     if (current) {
       setDraft({
         title: current.title ?? "",
