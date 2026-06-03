@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useRef } from "react";
+import { useAuth } from "@clerk/tanstack-react-start";
 import { getProject, updateSlide } from "@/lib/projects.functions";
 import { exportDeckToPptx } from "@/lib/pptx-export";
 import { Loader2, Save, ArrowLeft, Play, Download } from "lucide-react";
@@ -12,6 +13,16 @@ import { SlidePreview, type PreviewSlide } from "@/components/SlidePreview";
 export const Route = createFileRoute("/_authenticated/editor/$id")({
   component: Editor,
   head: () => ({ meta: [{ title: "Editor — Slide Sphere" }] }),
+  errorComponent: ({ error, reset }) => (
+    <div className="min-h-[60vh] grid place-items-center p-6 text-center">
+      <div className="space-y-3">
+        <div className="text-sm text-destructive">Couldn't load this deck: {error.message}</div>
+        <button onClick={reset} className="px-4 py-1.5 rounded-full border bg-card hover:bg-accent text-sm">
+          Retry
+        </button>
+      </div>
+    </div>
+  ),
 });
 
 type Slide = {
@@ -27,13 +38,17 @@ type Slide = {
 
 function Editor() {
   const { id } = Route.useParams();
+  const { isLoaded, isSignedIn } = useAuth();
   const qc = useQueryClient();
   const fetchProject = useServerFn(getProject);
   const save = useServerFn(updateSlide);
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["project", id],
     queryFn: () => fetchProject({ data: { id } }),
+    enabled: isLoaded && isSignedIn,
+    retry: false,
   });
+
   const [active, setActive] = useState(0);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [railOpen, setRailOpen] = useState(false);
