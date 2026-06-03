@@ -36,7 +36,7 @@ export const getProject = createServerFn({ method: "POST" })
       .eq("clerk_user_id", userId)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    if (!project) throw new Response("Not found", { status: 404 });
+    if (!project) throw new Error("Project not found");
     const { data: slides } = await supabaseAdmin
       .from("slides")
       .select("*")
