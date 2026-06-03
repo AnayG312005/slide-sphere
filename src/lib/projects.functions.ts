@@ -75,7 +75,13 @@ async function applySlidePatch(userId: string, patch: z.infer<typeof SlidePatch>
     .from("projects").select("clerk_user_id").eq("id", slide.project_id).maybeSingle();
   if (!project || project.clerk_user_id !== userId) throw new Error("Forbidden");
 
-  const update: Record<string, unknown> = {};
+  const update: {
+    title?: string;
+    body?: string;
+    notes?: string;
+    bullets?: string[];
+    image_url?: string | null;
+  } = {};
   if (patch.title !== undefined) update.title = patch.title;
   if (patch.body !== undefined) update.body = patch.body;
   if (patch.notes !== undefined) update.notes = patch.notes;
