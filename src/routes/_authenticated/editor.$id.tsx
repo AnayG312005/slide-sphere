@@ -145,11 +145,11 @@ function Editor() {
   if (!data) return null;
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-background">
-      {/* Top bar */}
-      <header className="h-14 shrink-0 flex items-center justify-between px-5 border-b bg-card/70 backdrop-blur-xl">
-        <div className="flex items-center gap-3 min-w-0">
-          <Link to="/dashboard" className="p-2 rounded-full hover:bg-accent transition">
+    <div className="flex flex-col bg-background h-[calc(100vh-80px)]">
+      {/* Secondary editor header — sits below global Navbar, sticky, frosted */}
+      <header className="sticky top-0 z-30 mx-3 mt-3 rounded-xl border border-border/60 bg-card/70 backdrop-blur-xl shadow-soft flex items-center justify-between px-4 py-2.5 gap-3">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <Link to="/dashboard" className="p-2 rounded-full hover:bg-accent transition shrink-0">
             <ArrowLeft className="w-4 h-4" />
           </Link>
           <div className="min-w-0">
@@ -157,7 +157,7 @@ function Editor() {
             <div className="text-[11px] text-muted-foreground">{slides.length} slides · slide {active + 1}</div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => setPreviewOpen(true)}
             disabled={slides.length === 0}
