@@ -58,30 +58,64 @@ export const deleteProject = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+const SlidePatch = z.object({
+  id: z.string().uuid(),
+  title: z.string().max(200).optional(),
+  body: z.string().max(4000).optional(),
+  notes: z.string().max(4000).optional(),
+  bullets: z.array(z.string().max(400)).max(20).optional(),
+  image_url: z.string().url().nullable().optional(),
+});
+
+async function applySlidePatch(userId: string, patch: z.infer<typeof SlidePatch>) {
+  const { data: slide } = await supabaseAdmin
+    .from("slides").select("project_id").eq("id", patch.id).maybeSingle();
+  if (!slide) throw new Error("Slide not found");
+  const { data: project } = await supabaseAdmin
+    .from("projects").select("clerk_user_id").eq("id", slide.project_id).maybeSingle();
+  if (!project || project.clerk_user_id !== userId) throw new Error("Forbidden");
+
+  const update: {
+    title?: string;
+    body?: string;
+    notes?: string;
+    bullets?: string[];
+    image_url?: string | null;
+  } = {};
+  if (patch.title !== undefined) update.title = patch.title;
+  if (patch.body !== undefined) update.body = patch.body;
+  if (patch.notes !== undefined) update.notes = patch.notes;
+  if (patch.bullets !== undefined) update.bullets = patch.bullets;
+  if (patch.image_url !== undefined) update.image_url = patch.image_url;
+  if (Object.keys(update).length === 0) return slide.project_id;
+
+  const { error } = await supabaseAdmin.from("slides").update(update).eq("id", patch.id);
+  if (error) throw new Error(error.message);
+  return slide.project_id;
+}
+
 export const updateSlide = createServerFn({ method: "POST" })
-  .inputValidator((d: { id: string; title?: string; body?: string; notes?: string }) =>
-    z.object({
-      id: z.string().uuid(),
-      title: z.string().max(200).optional(),
-      body: z.string().max(4000).optional(),
-      notes: z.string().max(4000).optional(),
-    }).parse(d)
+  .inputValidator((d: unknown) => SlidePatch.parse(d))
+  .handler(async ({ data }) => {
+    const userId = await requireUserId();
+    await applySlidePatch(userId, data);
+    return { ok: true };
+  });
+
+export const updateSlidesBulk = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z.object({ slides: z.array(SlidePatch).min(1).max(50) }).parse(d)
   )
   .handler(async ({ data }) => {
     const userId = await requireUserId();
-    // Verify ownership via project
-    const { data: slide } = await supabaseAdmin
-      .from("slides").select("project_id").eq("id", data.id).maybeSingle();
-    if (!slide) throw new Response("Not found", { status: 404 });
-    const { data: project } = await supabaseAdmin
-      .from("projects").select("clerk_user_id").eq("id", slide.project_id).maybeSingle();
-    if (!project || project.clerk_user_id !== userId) throw new Response("Forbidden", { status: 403 });
-
-    const update: { title?: string; body?: string; notes?: string } = {};
-    if (data.title !== undefined) update.title = data.title;
-    if (data.body !== undefined) update.body = data.body;
-    if (data.notes !== undefined) update.notes = data.notes;
-    const { error } = await supabaseAdmin.from("slides").update(update).eq("id", data.id);
-    if (error) throw new Error(error.message);
-    return { ok: true };
+    const projectIds = new Set<string>();
+    for (const p of data.slides) {
+      const pid = await applySlidePatch(userId, p);
+      projectIds.add(pid);
+    }
+    // Touch parent project(s) so updated_at reflects edit time on dashboard.
+    for (const pid of projectIds) {
+      await supabaseAdmin.from("projects").update({ updated_at: new Date().toISOString() }).eq("id", pid);
+    }
+    return { ok: true, count: data.slides.length };
   });
