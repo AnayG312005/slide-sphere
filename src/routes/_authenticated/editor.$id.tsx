@@ -42,7 +42,7 @@ function Editor() {
   const qc = useQueryClient();
   const fetchProject = useServerFn(getProject);
   const save = useServerFn(updateSlide);
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: ["project", id],
     queryFn: () => fetchProject({ data: { id } }),
     enabled: isLoaded && isSignedIn,
@@ -150,10 +150,34 @@ function Editor() {
     return () => window.removeEventListener("keydown", h);
   }, [slides.length, previewOpen]);
 
-  if (isLoading) {
+  if (!isLoaded || isLoading) {
     return (
       <div className="min-h-[60vh] grid place-items-center">
         <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+  if (!isSignedIn) {
+    return (
+      <div className="min-h-[60vh] grid place-items-center p-6 text-center">
+        <div className="space-y-3">
+          <div className="font-display text-xl text-ink">Sign in to edit this deck</div>
+          <Link to="/sign-in" className="inline-flex rounded-full bg-primary px-5 py-2 text-sm text-primary-foreground shadow-glow">
+            Sign in
+          </Link>
+        </div>
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div className="min-h-[60vh] grid place-items-center p-6 text-center">
+        <div className="space-y-3">
+          <div className="text-sm text-destructive">Couldn't load this deck: {(error as Error).message}</div>
+          <button onClick={() => refetch()} disabled={isFetching} className="px-4 py-1.5 rounded-full border bg-card hover:bg-accent disabled:opacity-60 text-sm">
+            {isFetching ? "Retrying…" : "Retry"}
+          </button>
+        </div>
       </div>
     );
   }
