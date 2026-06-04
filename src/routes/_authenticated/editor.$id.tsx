@@ -385,15 +385,20 @@ function Editor() {
           )}
         </div>
 
-        {/* Image regen panel */}
+        {/* Image search panel */}
         <ImageRegenPanel
           open={imagePanelOpen && mode === "edit"}
           onClose={() => setImagePanelOpen(false)}
           currentImageUrl={currentDraft?.image_url ?? null}
           defaultPrompt={currentDraft?.title || ""}
-          isGenerating={regenerating}
-          onGenerate={handleRegenerate}
+          isSearching={searching}
+          results={searchResults}
+          hasSearched={hasSearched}
+          onSearch={handleSearch}
+          onSelect={handleSelectImage}
+          selectedUrl={currentDraft?.image_url ?? null}
         />
+
 
         {/* Bottom dock */}
         <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-10">
