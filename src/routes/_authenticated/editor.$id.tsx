@@ -79,7 +79,9 @@ function Editor() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [railOpen, setRailOpen] = useState(false);
   const [imagePanelOpen, setImagePanelOpen] = useState(false);
-  const [regenerating, setRegenerating] = useState(false);
+  const [searching, setSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<StockImage[]>([]);
+  const [hasSearched, setHasSearched] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const stageRef = useRef<HTMLDivElement>(null);
