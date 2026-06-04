@@ -4,13 +4,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useAuth } from "@clerk/tanstack-react-start";
 import { getProject, updateSlidesBulk } from "@/lib/projects.functions";
-import { regenerateSlideImage } from "@/lib/images.functions";
+import { searchStockImages } from "@/lib/image-search.functions";
 import { exportDeckToPptx } from "@/lib/pptx-export";
 import { Loader2, Save, ArrowLeft, Play, Download, Pencil, Eye, Plus, Trash2, GripVertical } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { SlidePreview, type PreviewSlide } from "@/components/SlidePreview";
-import { ImageRegenPanel, type ImageStyle } from "@/components/ImageRegenPanel";
+import { ImageRegenPanel, type StockImage } from "@/components/ImageRegenPanel";
 
 export const Route = createFileRoute("/_authenticated/editor/$id")({
   component: Editor,
