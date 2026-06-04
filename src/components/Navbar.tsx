@@ -20,6 +20,7 @@ export function Navbar() {
             {!isSignedIn && (
               <>
                 <a href="/#features" className="hover:text-foreground transition">Features</a>
+                <Link to="/about" className="hover:text-foreground transition">About</Link>
                 <Link to="/pricing" className="hover:text-foreground transition">Pricing</Link>
               </>
             )}
