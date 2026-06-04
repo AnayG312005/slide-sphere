@@ -64,7 +64,7 @@ function Editor() {
   const qc = useQueryClient();
   const fetchProject = useServerFn(getProject);
   const bulkSave = useServerFn(updateSlidesBulk);
-  const regenImage = useServerFn(regenerateSlideImage);
+  const searchImages = useServerFn(searchStockImages);
 
   const { data, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: ["project", id],
