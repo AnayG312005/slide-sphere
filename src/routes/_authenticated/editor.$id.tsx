@@ -168,21 +168,25 @@ function Editor() {
     }
   };
 
-  const handleRegenerate = async (prompt: string, style: ImageStyle) => {
+  const handleSearch = async (query: string) => {
     if (!current) return;
     try {
-      setRegenerating(true);
-      const { image_url } = await regenImage({ data: { slideId: current.id, prompt, style } });
-      setDrafts((prev) => ({ ...prev, [current.id]: { ...prev[current.id], image_url } }));
-      // Persisted server-side already; refetch so saved baseline matches.
-      await refetch();
-      qc.invalidateQueries({ queryKey: ["projects"] });
-      toast.success("Image regenerated");
+      setSearching(true);
+      setHasSearched(true);
+      const { images } = await searchImages({ data: { query, count: 5 } });
+      setSearchResults(images);
     } catch (e) {
-      toast.error((e as Error).message || "Failed to generate image");
+      toast.error((e as Error).message || "Image search failed");
+      setSearchResults([]);
     } finally {
-      setRegenerating(false);
+      setSearching(false);
     }
+  };
+
+  const handleSelectImage = (url: string) => {
+    if (!current) return;
+    setDrafts((prev) => ({ ...prev, [current.id]: { ...prev[current.id], image_url: url } }));
+    toast.success("Image applied — save to keep changes");
   };
 
   // Keyboard arrows
