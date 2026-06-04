@@ -138,4 +138,4 @@ bun install
 
 ---
 
-© Slide Sphere. Built on Lovable.
+© Slide Sphere. 
