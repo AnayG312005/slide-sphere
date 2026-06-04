@@ -100,6 +100,12 @@ function Editor() {
   const current = slides[active];
   const currentDraft = current ? drafts[current.id] : undefined;
 
+  // Reset image search state whenever the active slide or panel toggles.
+  useEffect(() => {
+    setSearchResults([]);
+    setHasSearched(false);
+  }, [current?.id, imagePanelOpen]);
+
   const dirtySlideIds = useMemo(() => {
     const out: string[] = [];
     for (const s of slides) {
