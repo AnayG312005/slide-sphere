@@ -46,7 +46,8 @@ export const regenerateSlideImage = createServerFn({ method: "POST" })
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash-image",
-        prompt: fullPrompt,
+        messages: [{ role: "user", content: fullPrompt }],
+        modalities: ["image", "text"],
       }),
     });
     if (aiRes.status === 429) throw new Error("Rate limit exceeded. Please try again shortly.");
