@@ -306,7 +306,6 @@ function AboutPage() {
           <li><span className="text-ink font-medium">Full editability:</span> generators stop where editors begin. We give you both.</li>
           <li><span className="text-ink font-medium">Fair credits:</span> only new generations cost credits — editing is always free.</li>
           <li><span className="text-ink font-medium">Privacy first:</span> your prompts and decks are encrypted in transit and at rest, never used to train models.</li>
-          <li><span className="text-ink font-medium">Built on modern infra:</span> TanStack Start, React 19, Cloudflare Workers and Lovable Cloud for instant, global performance.</li>
         </ul>
       </Section>
 
