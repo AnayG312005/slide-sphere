@@ -4,13 +4,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useAuth } from "@clerk/tanstack-react-start";
 import { getProject, updateSlidesBulk } from "@/lib/projects.functions";
-import { regenerateSlideImage } from "@/lib/images.functions";
+import { searchStockImages } from "@/lib/image-search.functions";
 import { exportDeckToPptx } from "@/lib/pptx-export";
 import { Loader2, Save, ArrowLeft, Play, Download, Pencil, Eye, Plus, Trash2, GripVertical } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { SlidePreview, type PreviewSlide } from "@/components/SlidePreview";
-import { ImageRegenPanel, type ImageStyle } from "@/components/ImageRegenPanel";
+import { ImageRegenPanel, type StockImage } from "@/components/ImageRegenPanel";
 
 export const Route = createFileRoute("/_authenticated/editor/$id")({
   component: Editor,
@@ -64,7 +64,7 @@ function Editor() {
   const qc = useQueryClient();
   const fetchProject = useServerFn(getProject);
   const bulkSave = useServerFn(updateSlidesBulk);
-  const regenImage = useServerFn(regenerateSlideImage);
+  const searchImages = useServerFn(searchStockImages);
 
   const { data, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: ["project", id],
@@ -79,7 +79,9 @@ function Editor() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [railOpen, setRailOpen] = useState(false);
   const [imagePanelOpen, setImagePanelOpen] = useState(false);
-  const [regenerating, setRegenerating] = useState(false);
+  const [searching, setSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<StockImage[]>([]);
+  const [hasSearched, setHasSearched] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const stageRef = useRef<HTMLDivElement>(null);
@@ -97,6 +99,12 @@ function Editor() {
 
   const current = slides[active];
   const currentDraft = current ? drafts[current.id] : undefined;
+
+  // Reset image search state whenever the active slide or panel toggles.
+  useEffect(() => {
+    setSearchResults([]);
+    setHasSearched(false);
+  }, [current?.id, imagePanelOpen]);
 
   const dirtySlideIds = useMemo(() => {
     const out: string[] = [];
@@ -166,21 +174,25 @@ function Editor() {
     }
   };
 
-  const handleRegenerate = async (prompt: string, style: ImageStyle) => {
+  const handleSearch = async (query: string) => {
     if (!current) return;
     try {
-      setRegenerating(true);
-      const { image_url } = await regenImage({ data: { slideId: current.id, prompt, style } });
-      setDrafts((prev) => ({ ...prev, [current.id]: { ...prev[current.id], image_url } }));
-      // Persisted server-side already; refetch so saved baseline matches.
-      await refetch();
-      qc.invalidateQueries({ queryKey: ["projects"] });
-      toast.success("Image regenerated");
+      setSearching(true);
+      setHasSearched(true);
+      const { images } = await searchImages({ data: { query, count: 5 } });
+      setSearchResults(images);
     } catch (e) {
-      toast.error((e as Error).message || "Failed to generate image");
+      toast.error((e as Error).message || "Image search failed");
+      setSearchResults([]);
     } finally {
-      setRegenerating(false);
+      setSearching(false);
     }
+  };
+
+  const handleSelectImage = (url: string) => {
+    if (!current) return;
+    setDrafts((prev) => ({ ...prev, [current.id]: { ...prev[current.id], image_url: url } }));
+    toast.success("Image applied — save to keep changes");
   };
 
   // Keyboard arrows
@@ -379,15 +391,20 @@ function Editor() {
           )}
         </div>
 
-        {/* Image regen panel */}
+        {/* Image search panel */}
         <ImageRegenPanel
           open={imagePanelOpen && mode === "edit"}
           onClose={() => setImagePanelOpen(false)}
           currentImageUrl={currentDraft?.image_url ?? null}
           defaultPrompt={currentDraft?.title || ""}
-          isGenerating={regenerating}
-          onGenerate={handleRegenerate}
+          isSearching={searching}
+          results={searchResults}
+          hasSearched={hasSearched}
+          onSearch={handleSearch}
+          onSelect={handleSelectImage}
+          selectedUrl={currentDraft?.image_url ?? null}
         />
+
 
         {/* Bottom dock */}
         <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-10">
