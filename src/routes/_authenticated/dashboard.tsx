@@ -20,6 +20,7 @@ function Dashboard() {
   const del = useServerFn(deleteProject);
   const { user } = useUser();
   const router = useRouter();
+  const hasUnlimited = useHasUnlimited();
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["projects"],
     queryFn: () => fetchProjects(),
