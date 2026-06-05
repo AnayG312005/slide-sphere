@@ -54,7 +54,13 @@ export function GenerationModal({ open, onClose, initialPrompt, initialSlideCoun
       });
       setStep("outline");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => {
+      if (e.message.startsWith("PREMIUM_REQUIRED")) {
+        toast.error("Upgrade to Unlimited Plan ($1/month) to generate 12–15 slide decks.");
+        navigate({ to: "/pricing" });
+        onClose();
+      } else { toast.error(e.message); }
+    },
   });
 
   const finalizeMut = useMutation({
