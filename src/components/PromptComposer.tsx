@@ -85,15 +85,37 @@ export function PromptComposer({ compact = false }: Props) {
             <div className="inline-flex items-center rounded-full bg-card border p-1 shadow-sm">
               {SLIDE_BUCKETS.map((b) => {
                 const active = slideValue === b.value;
+                const locked = b.premium && !hasUnlimited;
+                const onClick = () => {
+                  if (locked) {
+                    toast.info("Upgrade to Unlimited Plan for only $1/month to unlock 12–15 slide presentations.");
+                    navigate({ to: "/pricing" });
+                    return;
+                  }
+                  setSlideValue(b.value);
+                };
                 return (
                   <button
                     key={b.value} type="button"
-                    onClick={() => setSlideValue(b.value)}
-                    className={`relative px-3 py-1.5 text-xs font-medium rounded-full transition ${
-                      active ? "bg-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-ink"
+                    onClick={onClick}
+                    title={locked ? "Premium — Unlimited plan" : undefined}
+                    className={`relative px-3 py-1.5 text-xs font-medium rounded-full transition inline-flex items-center gap-1 ${
+                      b.premium
+                        ? active
+                          ? "bg-gradient-to-r from-amber-400 to-fuchsia-500 text-white shadow-glow"
+                          : "bg-gradient-to-r from-amber-400/15 to-fuchsia-500/15 text-ink hover:from-amber-400/25 hover:to-fuchsia-500/25 ring-1 ring-amber-400/40"
+                        : active
+                          ? "bg-primary text-primary-foreground shadow-glow"
+                          : "text-muted-foreground hover:text-ink"
                     }`}
                   >
+                    {b.premium && <Crown className={`w-3 h-3 ${active ? "text-white" : "text-amber-500"}`} />}
                     {b.label}
+                    {b.premium && (
+                      <span className={`ml-0.5 text-[9px] uppercase tracking-wider font-semibold ${active ? "text-white/90" : "text-amber-600"}`}>
+                        Premium
+                      </span>
+                    )}
                   </button>
                 );
               })}
