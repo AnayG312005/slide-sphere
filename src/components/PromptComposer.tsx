@@ -148,7 +148,7 @@ export function PromptComposer({ compact = false }: Props) {
         onClose={() => setModalOpen(false)}
         initialPrompt={composedTopic}
         initialSlideCount={slideValue}
-        isPremium={!!isPremiumPlan}
+        isPremium={hasUnlimited}
       />
     </>
   );
