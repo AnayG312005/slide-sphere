@@ -51,8 +51,42 @@ function Dashboard() {
         </p>
       </div>
 
-      <div className="mb-16">
+      <div className="mb-8">
         <PromptComposer onCreated={() => refetch()} />
+      </div>
+
+      {/* Plan status */}
+      <div className="mb-12 glass border rounded-2xl p-5 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className={`grid place-items-center w-10 h-10 rounded-xl ${hasUnlimited ? "bg-gradient-to-br from-amber-400 to-fuchsia-500" : "bg-secondary"}`}>
+            {hasUnlimited ? <Crown className="w-5 h-5 text-white" /> : <Sparkles className="w-5 h-5 text-primary" />}
+          </div>
+          <div>
+            <div className="text-xs uppercase tracking-widest text-muted-foreground">Current plan</div>
+            <div className="font-display text-lg text-ink">
+              {hasUnlimited ? "Unlimited Plan" : "Free Plan"}
+              {hasUnlimited && (
+                <span className="ml-2 align-middle text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-fuchsia-500 text-white">
+                  Premium
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {hasUnlimited
+                ? "12–15 slide decks unlocked. Thanks for supporting Slide Sphere."
+                : "Generate decks up to 12 slides. Upgrade to unlock 12–15."}
+            </p>
+          </div>
+        </div>
+        {hasUnlimited ? (
+          <Link to="/pricing" className="text-sm px-4 py-2 rounded-full border hover:bg-accent">
+            Manage subscription
+          </Link>
+        ) : (
+          <Link to="/pricing" className="inline-flex items-center gap-1.5 text-sm px-4 py-2 rounded-full bg-gradient-to-r from-amber-400 to-fuchsia-500 text-white shadow-glow hover:opacity-90">
+            <Crown className="w-4 h-4" /> Upgrade — $1/month
+          </Link>
+        )}
       </div>
 
       {/* Projects */}
