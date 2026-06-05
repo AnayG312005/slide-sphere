@@ -54,7 +54,13 @@ export function GenerationModal({ open, onClose, initialPrompt, initialSlideCoun
       });
       setStep("outline");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => {
+      if (e.message.startsWith("PREMIUM_REQUIRED")) {
+        toast.error("Upgrade to Unlimited Plan ($1/month) to generate 12–15 slide decks.");
+        navigate({ to: "/pricing" });
+        onClose();
+      } else { toast.error(e.message); }
+    },
   });
 
   const finalizeMut = useMutation({
@@ -74,6 +80,9 @@ export function GenerationModal({ open, onClose, initialPrompt, initialSlideCoun
     onError: (e: Error) => {
       if (e.message.startsWith("INSUFFICIENT_CREDITS")) {
         toast.error("Out of credits — wait for refill or contact support");
+      } else if (e.message.startsWith("PREMIUM_REQUIRED")) {
+        toast.error("Upgrade to Unlimited Plan ($1/month) to generate 12–15 slide decks.");
+        navigate({ to: "/pricing" });
       } else { toast.error(e.message); }
       setStep("outline");
     },

@@ -2,18 +2,16 @@ import { useState, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@clerk/tanstack-react-start";
 import { toast } from "sonner";
-import { Wand2, Paperclip, X } from "lucide-react";
+import { Wand2, Paperclip, X, Crown } from "lucide-react";
 import { GenerationModal } from "./GenerationModal";
-import { useServerFn } from "@tanstack/react-start";
-import { useQuery } from "@tanstack/react-query";
-import { getMyProfile } from "@/lib/profile.functions";
+import { useHasUnlimited } from "@/lib/billing";
 
 const SLIDE_BUCKETS = [
-  { label: "0–3", value: 3 },
-  { label: "3–6", value: 6 },
-  { label: "6–9", value: 9 },
-  { label: "9–12", value: 12 },
-  { label: "12–15", value: 15 },
+  { label: "0–3", value: 3, premium: false },
+  { label: "3–6", value: 6, premium: false },
+  { label: "6–9", value: 9, premium: false },
+  { label: "9–12", value: 12, premium: false },
+  { label: "12–15", value: 15, premium: true },
 ] as const;
 
 interface Props {
@@ -30,14 +28,7 @@ export function PromptComposer({ compact = false }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
-  const fetchProfile = useServerFn(getMyProfile);
-  const { data: prof } = useQuery({
-    queryKey: ["my-profile"],
-    queryFn: () => fetchProfile(),
-    enabled: !!isSignedIn,
-    staleTime: 10_000,
-  });
-  const isPremiumPlan = prof?.profile.plan === "premium";
+  const hasUnlimited = useHasUnlimited();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,15 +85,37 @@ export function PromptComposer({ compact = false }: Props) {
             <div className="inline-flex items-center rounded-full bg-card border p-1 shadow-sm">
               {SLIDE_BUCKETS.map((b) => {
                 const active = slideValue === b.value;
+                const locked = b.premium && !hasUnlimited;
+                const onClick = () => {
+                  if (locked) {
+                    toast.info("Upgrade to Unlimited Plan for only $1/month to unlock 12–15 slide presentations.");
+                    navigate({ to: "/pricing" });
+                    return;
+                  }
+                  setSlideValue(b.value);
+                };
                 return (
                   <button
                     key={b.value} type="button"
-                    onClick={() => setSlideValue(b.value)}
-                    className={`relative px-3 py-1.5 text-xs font-medium rounded-full transition ${
-                      active ? "bg-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-ink"
+                    onClick={onClick}
+                    title={locked ? "Premium — Unlimited plan" : undefined}
+                    className={`relative px-3 py-1.5 text-xs font-medium rounded-full transition inline-flex items-center gap-1 ${
+                      b.premium
+                        ? active
+                          ? "bg-gradient-to-r from-amber-400 to-fuchsia-500 text-white shadow-glow"
+                          : "bg-gradient-to-r from-amber-400/15 to-fuchsia-500/15 text-ink hover:from-amber-400/25 hover:to-fuchsia-500/25 ring-1 ring-amber-400/40"
+                        : active
+                          ? "bg-primary text-primary-foreground shadow-glow"
+                          : "text-muted-foreground hover:text-ink"
                     }`}
                   >
+                    {b.premium && <Crown className={`w-3 h-3 ${active ? "text-white" : "text-amber-500"}`} />}
                     {b.label}
+                    {b.premium && (
+                      <span className={`ml-0.5 text-[9px] uppercase tracking-wider font-semibold ${active ? "text-white/90" : "text-amber-600"}`}>
+                        Premium
+                      </span>
+                    )}
                   </button>
                 );
               })}
@@ -135,7 +148,7 @@ export function PromptComposer({ compact = false }: Props) {
         onClose={() => setModalOpen(false)}
         initialPrompt={composedTopic}
         initialSlideCount={slideValue}
-        isPremium={!!isPremiumPlan}
+        isPremium={hasUnlimited}
       />
     </>
   );
