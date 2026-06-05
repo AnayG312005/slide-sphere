@@ -2,18 +2,16 @@ import { useState, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@clerk/tanstack-react-start";
 import { toast } from "sonner";
-import { Wand2, Paperclip, X } from "lucide-react";
+import { Wand2, Paperclip, X, Crown } from "lucide-react";
 import { GenerationModal } from "./GenerationModal";
-import { useServerFn } from "@tanstack/react-start";
-import { useQuery } from "@tanstack/react-query";
-import { getMyProfile } from "@/lib/profile.functions";
+import { useHasUnlimited } from "@/lib/billing";
 
 const SLIDE_BUCKETS = [
-  { label: "0–3", value: 3 },
-  { label: "3–6", value: 6 },
-  { label: "6–9", value: 9 },
-  { label: "9–12", value: 12 },
-  { label: "12–15", value: 15 },
+  { label: "0–3", value: 3, premium: false },
+  { label: "3–6", value: 6, premium: false },
+  { label: "6–9", value: 9, premium: false },
+  { label: "9–12", value: 12, premium: false },
+  { label: "12–15", value: 15, premium: true },
 ] as const;
 
 interface Props {
