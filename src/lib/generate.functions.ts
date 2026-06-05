@@ -149,6 +149,7 @@ export const finalizeDeck = createServerFn({ method: "POST" })
   .inputValidator((d) => FinalizeInput.parse(d))
   .handler(async ({ data }) => {
     const userId = await requireUserId();
+    await requireUnlimitedIfPremiumSlides(data.slides.length);
 
     // Pre-flight credit check (atomic deduct after success would risk wasted spend on AI failure)
     const { data: profile } = await supabaseAdmin
