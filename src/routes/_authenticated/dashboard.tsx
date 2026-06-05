@@ -1,13 +1,14 @@
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useUser } from "@clerk/tanstack-react-start";
 import { listProjects, deleteProject } from "@/lib/projects.functions";
 import { PromptComposer } from "@/components/PromptComposer";
-import { FileText, Trash2, Loader2, Sparkles } from "lucide-react";
+import { FileText, Trash2, Loader2, Sparkles, Crown } from "lucide-react";
 import { Footer } from "@/components/Footer";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import { useHasUnlimited } from "@/lib/billing";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
