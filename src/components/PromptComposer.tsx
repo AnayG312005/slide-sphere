@@ -28,14 +28,7 @@ export function PromptComposer({ compact = false }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
-  const fetchProfile = useServerFn(getMyProfile);
-  const { data: prof } = useQuery({
-    queryKey: ["my-profile"],
-    queryFn: () => fetchProfile(),
-    enabled: !!isSignedIn,
-    staleTime: 10_000,
-  });
-  const isPremiumPlan = prof?.profile.plan === "premium";
+  const hasUnlimited = useHasUnlimited();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
