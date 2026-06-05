@@ -73,7 +73,7 @@ export const generateOutline = createServerFn({ method: "POST" })
   .inputValidator((d) => OutlineInput.parse(d))
   .handler(async ({ data }) => {
     await requireUserId();
-    const sys = `You are an elite AI presentation strategist (Gamma / Beautiful.ai-class).
+    await requireUnlimitedIfPremiumSlides(data.slideCount);
 Analyze the user's brief: extract topic, audience, tone, purpose, complexity, slide count.
 
 Then design a Gamma-style narrative arc using these story beats (skip/merge to fit the slide budget — never pad):
