@@ -57,21 +57,23 @@ export const getCreditHistory = createServerFn({ method: "GET" }).handler(async 
     .eq("clerk_user_id", userId)
     .order("created_at", { ascending: false })
     .limit(50);
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error("[getCreditHistory]", error);
+    throw new Error("Operation failed. Please try again.");
+  }
   return { transactions: data ?? [] };
 });
 
-// For demo Stripe-less premium upgrade — wired to Stripe checkout later
+// Premium upgrades are handled via Clerk Billing entitlements (see
+// `useHasUnlimited` and the server-side `has({ plan: "unlimited" })` check).
+// This RPC previously granted 500 credits without any payment verification,
+// which allowed any signed-in user to bypass billing. It is now disabled;
+// re-enable only behind a verified Stripe/Clerk webhook that records the
+// redeemed session id to prevent replay.
 export const claimPremium = createServerFn({ method: "POST" })
   .inputValidator((d: { sessionId?: string }) => z.object({ sessionId: z.string().optional() }).parse(d))
   .handler(async () => {
-    const userId = await requireUserId();
-    const { data, error } = await supabaseAdmin.rpc("add_credits", {
-      _clerk_user_id: userId,
-      _amount: 500,
-      _reason: "premium_purchase",
-      _metadata: { source: "stripe" },
-    });
-    if (error) throw new Error(error.message);
-    return { credits: data as number };
+    await requireUserId();
+    throw new Error("This endpoint is disabled. Please upgrade via the pricing page.");
   });
+

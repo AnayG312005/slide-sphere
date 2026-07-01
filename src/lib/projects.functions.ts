@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireUserId } from "./auth.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { internalError } from "./safe-error";
 
 export const listProjects = createServerFn({ method: "GET" }).handler(async () => {
   const userId = await requireUserId();
@@ -10,7 +11,7 @@ export const listProjects = createServerFn({ method: "GET" }).handler(async () =
     .select("id,title,description,theme,status,updated_at,created_at")
     .eq("clerk_user_id", userId)
     .order("updated_at", { ascending: false });
-  if (error) throw new Error(error.message);
+  if (error) throw internalError("listProjects", error);
   const ids = (data ?? []).map((p) => p.id);
   let covers: Record<string, string | null> = {};
   if (ids.length > 0) {
@@ -35,7 +36,7 @@ export const getProject = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .eq("clerk_user_id", userId)
       .maybeSingle();
-    if (error) throw new Error(error.message);
+    if (error) throw internalError("getProject", error);
     if (!project) throw new Error("Project not found");
     const { data: slides } = await supabaseAdmin
       .from("slides")
@@ -54,7 +55,7 @@ export const deleteProject = createServerFn({ method: "POST" })
       .delete()
       .eq("id", data.id)
       .eq("clerk_user_id", userId);
-    if (error) throw new Error(error.message);
+    if (error) throw internalError("deleteProject", error);
     return { ok: true };
   });
 
@@ -90,7 +91,7 @@ async function applySlidePatch(userId: string, patch: z.infer<typeof SlidePatch>
   if (Object.keys(update).length === 0) return slide.project_id;
 
   const { error } = await supabaseAdmin.from("slides").update(update).eq("id", patch.id);
-  if (error) throw new Error(error.message);
+  if (error) throw internalError("applySlidePatch", error);
   return slide.project_id;
 }
 

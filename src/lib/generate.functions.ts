@@ -4,6 +4,7 @@ import { auth } from "@clerk/tanstack-react-start/server";
 import { requireUserId } from "./auth.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { resolveSlideImage, inferStyleHint } from "./image-pipeline.server";
+import { internalError } from "./safe-error";
 
 async function requireUnlimitedIfPremiumSlides(slideCount: number) {
   if (slideCount <= 12) return;
@@ -60,7 +61,7 @@ async function callGemini(systemPrompt: string, userPrompt: string, schema: obje
   if (response.status === 402) throw new Error("AI credits exhausted. Please add credits in workspace settings.");
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(`AI request failed: ${text.slice(0, 200)}`);
+    throw internalError(`callGemini:${fnName}`, new Error(`status=${response.status} body=${text.slice(0, 500)}`));
   }
   const json = await response.json();
   const toolCall = json.choices?.[0]?.message?.tool_calls?.[0];
@@ -225,7 +226,7 @@ Generate ${data.slides.length} fully-realized slides.`;
         slide_count: data.slides.length,
         status: "ready",
       }).select().single();
-    if (pErr) throw new Error(pErr.message);
+    if (pErr) throw internalError("finalizeDeck:insertProject", pErr);
 
     const slideRows = parsed.slides.map((s, i) => ({
       project_id: project.id,
@@ -239,7 +240,7 @@ Generate ${data.slides.length} fully-realized slides.`;
       image_source: imageSources[i],
     }));
     const { error: sErr } = await supabaseAdmin.from("slides").insert(slideRows);
-    if (sErr) throw new Error(sErr.message);
+    if (sErr) throw internalError("finalizeDeck:insertSlides", sErr);
 
     // Deduct credits (atomic)
     const { data: remaining, error: cErr } = await supabaseAdmin.rpc("consume_credits", {
@@ -248,7 +249,7 @@ Generate ${data.slides.length} fully-realized slides.`;
       _reason: "deck_generated",
       _project_id: project.id,
     });
-    if (cErr) throw new Error(cErr.message);
+    if (cErr) throw internalError("finalizeDeck:consumeCredits", cErr);
 
     return { projectId: project.id, creditsRemaining: remaining as number };
   });
