@@ -58,30 +58,6 @@ function Landing() {
         </div>
       </section>
 
-      {/* Cinematic video */}
-      <section className="px-4 sm:px-6 lg:px-8 pb-24">
-        <div className="mx-auto max-w-6xl">
-          <div className="relative rounded-3xl overflow-hidden shadow-glow border bg-black aspect-video">
-            <video
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="w-full h-full object-cover opacity-95"
-              poster="https://images.unsplash.com/photo-1551434678-e076c223a692?w=1600&q=80"
-            >
-              <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4" type="video/mp4" />
-            </video>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
-            <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between text-white">
-              <div>
-                <div className="text-xs uppercase tracking-widest text-white/70">Live preview</div>
-                <div className="font-display text-2xl sm:text-3xl">Watch Slide Sphere design a deck in real-time</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       <LogoMarquee />
 
