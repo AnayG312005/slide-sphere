@@ -38,8 +38,11 @@ export function LogoMarquee() {
   return (
     <section className="py-20 border-y bg-secondary/20 overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center mb-12">
+        <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground mb-3">
+          Trusted by Professionals at
+        </p>
         <h3 className="font-display text-3xl sm:text-4xl text-ink">
-          Trusted by Professionals at the World's Leading Tech Companies
+          The World's Leading Tech Companies
         </h3>
       </div>
 
