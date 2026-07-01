@@ -240,7 +240,7 @@ Generate ${data.slides.length} fully-realized slides.`;
       image_source: imageSources[i],
     }));
     const { error: sErr } = await supabaseAdmin.from("slides").insert(slideRows);
-    if (sErr) throw new Error(sErr.message);
+    if (sErr) throw internalError("finalizeDeck:insertSlides", sErr);
 
     // Deduct credits (atomic)
     const { data: remaining, error: cErr } = await supabaseAdmin.rpc("consume_credits", {
