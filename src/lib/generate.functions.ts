@@ -226,7 +226,7 @@ Generate ${data.slides.length} fully-realized slides.`;
         slide_count: data.slides.length,
         status: "ready",
       }).select().single();
-    if (pErr) throw new Error(pErr.message);
+    if (pErr) throw internalError("finalizeDeck:insertProject", pErr);
 
     const slideRows = parsed.slides.map((s, i) => ({
       project_id: project.id,
