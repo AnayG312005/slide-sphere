@@ -249,7 +249,7 @@ Generate ${data.slides.length} fully-realized slides.`;
       _reason: "deck_generated",
       _project_id: project.id,
     });
-    if (cErr) throw new Error(cErr.message);
+    if (cErr) throw internalError("finalizeDeck:consumeCredits", cErr);
 
     return { projectId: project.id, creditsRemaining: remaining as number };
   });
