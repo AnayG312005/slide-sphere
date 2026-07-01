@@ -61,7 +61,7 @@ async function callGemini(systemPrompt: string, userPrompt: string, schema: obje
   if (response.status === 402) throw new Error("AI credits exhausted. Please add credits in workspace settings.");
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(`AI request failed: ${text.slice(0, 200)}`);
+    throw internalError(`callGemini:${fnName}`, new Error(`status=${response.status} body=${text.slice(0, 500)}`));
   }
   const json = await response.json();
   const toolCall = json.choices?.[0]?.message?.tool_calls?.[0];
