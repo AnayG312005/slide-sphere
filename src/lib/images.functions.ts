@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireUserId } from "./auth.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { internalError } from "./safe-error";
 
 const STYLES = ["illustration", "photo", "abstract", "3d", "line-art"] as const;
 type StyleKey = (typeof STYLES)[number];
