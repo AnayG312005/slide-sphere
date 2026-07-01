@@ -36,7 +36,7 @@ function Landing() {
         <div className="mx-auto max-w-4xl text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary border text-xs text-muted-foreground mb-6">
             <Sparkles className="w-3.5 h-3.5 text-primary" />
-            Powered by Gemini 2.5 — decks in seconds
+            From Idea to Presentation in Seconds
           </div>
           <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl leading-[1.05] text-ink">
             Presentations that <span className="italic text-gradient-ember">feel handcrafted</span>,
