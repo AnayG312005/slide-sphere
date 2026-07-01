@@ -55,7 +55,7 @@ export const regenerateSlideImage = createServerFn({ method: "POST" })
     if (aiRes.status === 402) throw new Error("AI credits exhausted. Please add credits in workspace settings.");
     if (!aiRes.ok) {
       const t = await aiRes.text();
-      throw new Error(`Image generation failed: ${t.slice(0, 200)}`);
+      throw internalError("regenerateSlideImage:ai", new Error(t.slice(0, 500)));
     }
     const json = await aiRes.json();
     const b64 = json?.data?.[0]?.b64_json as string | undefined;
@@ -66,18 +66,18 @@ export const regenerateSlideImage = createServerFn({ method: "POST" })
     const { error: upErr } = await supabaseAdmin.storage
       .from(BUCKET)
       .upload(path, bytes, { contentType: "image/png", upsert: true });
-    if (upErr) throw new Error(`Upload failed: ${upErr.message}`);
+    if (upErr) throw internalError("regenerateSlideImage:upload", upErr);
 
     const { data: signed, error: signErr } = await supabaseAdmin.storage
       .from(BUCKET)
       .createSignedUrl(path, SIGN_TTL);
-    if (signErr || !signed?.signedUrl) throw new Error("Could not sign image URL");
+    if (signErr || !signed?.signedUrl) throw internalError("regenerateSlideImage:sign", signErr);
 
     const { error: updErr } = await supabaseAdmin
       .from("slides")
       .update({ image_url: signed.signedUrl, image_source: "ai" })
       .eq("id", data.slideId);
-    if (updErr) throw new Error(updErr.message);
+    if (updErr) throw internalError("regenerateSlideImage:update", updErr);
 
     return { image_url: signed.signedUrl };
   });
