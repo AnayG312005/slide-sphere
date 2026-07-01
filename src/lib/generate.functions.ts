@@ -4,6 +4,7 @@ import { auth } from "@clerk/tanstack-react-start/server";
 import { requireUserId } from "./auth.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { resolveSlideImage, inferStyleHint } from "./image-pipeline.server";
+import { internalError } from "./safe-error";
 
 async function requireUnlimitedIfPremiumSlides(slideCount: number) {
   if (slideCount <= 12) return;
