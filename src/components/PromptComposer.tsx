@@ -2,9 +2,10 @@ import { useState, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@clerk/tanstack-react-start";
 import { toast } from "sonner";
-import { Wand2, Paperclip, X, Crown } from "lucide-react";
+import { Wand2, Paperclip, X, Crown, Loader2, FileText } from "lucide-react";
 import { GenerationModal } from "./GenerationModal";
 import { useHasUnlimited } from "@/lib/billing";
+import { parseDocument, composeSourcedPrompt, type ParsedDocument } from "@/lib/parse-document";
 
 const SLIDE_BUCKETS = [
   { label: "0–3", value: 3, premium: false },
@@ -25,6 +26,8 @@ export function PromptComposer({ compact = false }: Props) {
   const [prompt, setPrompt] = useState("");
   const [slideValue, setSlideValue] = useState<number>(9);
   const [file, setFile] = useState<File | null>(null);
+  const [parsed, setParsed] = useState<ParsedDocument | null>(null);
+  const [parsing, setParsing] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -37,22 +40,49 @@ export function PromptComposer({ compact = false }: Props) {
       navigate({ to: "/sign-up" });
       return;
     }
-    if (prompt.trim().length < 3 && !file) {
-      toast.error("Describe your topic or attach a file");
+    if (parsing) {
+      toast.info("Still reading your document…");
+      return;
+    }
+    if (prompt.trim().length < 3 && !parsed) {
+      toast.error("Describe your topic or attach a document");
       return;
     }
     setModalOpen(true);
   };
 
-  const onFile = (f: File | null) => {
-    if (!f) return setFile(null);
-    const ok = ["application/pdf", "image/jpeg", "image/jpg"].includes(f.type) || /\.(pdf|jpe?g)$/i.test(f.name);
-    if (!ok) { toast.error("Only PDF, JPG, or JPEG files supported"); return; }
+  const onFile = async (f: File | null) => {
+    if (!f) { setFile(null); setParsed(null); return; }
+    const name = f.name.toLowerCase();
+    const ok =
+      f.type === "application/pdf" ||
+      f.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+      name.endsWith(".pdf") ||
+      name.endsWith(".docx");
+    if (!ok) { toast.error("Only PDF or DOCX files supported"); return; }
     if (f.size > 10 * 1024 * 1024) { toast.error("File must be under 10MB"); return; }
     setFile(f);
+    setParsed(null);
+    setParsing(true);
+    try {
+      const doc = await parseDocument(f);
+      if (doc.text.length < 40) {
+        toast.error("Couldn't extract text — is the PDF scanned images only?");
+        setFile(null);
+      } else {
+        setParsed(doc);
+        toast.success(`Read ${doc.charCount.toLocaleString()} characters${doc.truncated ? " (truncated)" : ""}`);
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to parse document";
+      toast.error(msg);
+      setFile(null);
+    } finally {
+      setParsing(false);
+    }
   };
 
-  const composedTopic = file ? `${prompt.trim()}\n\n(Source document attached: ${file.name})` : prompt.trim();
+  const composedTopic = composeSourcedPrompt(prompt, parsed);
 
   return (
     <>
