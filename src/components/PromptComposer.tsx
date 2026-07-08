@@ -2,9 +2,10 @@ import { useState, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@clerk/tanstack-react-start";
 import { toast } from "sonner";
-import { Wand2, Paperclip, X, Crown } from "lucide-react";
+import { Wand2, Paperclip, X, Crown, Loader2, FileText } from "lucide-react";
 import { GenerationModal } from "./GenerationModal";
 import { useHasUnlimited } from "@/lib/billing";
+import { parseDocument, composeSourcedPrompt, type ParsedDocument } from "@/lib/parse-document";
 
 const SLIDE_BUCKETS = [
   { label: "0–3", value: 3, premium: false },
@@ -25,6 +26,8 @@ export function PromptComposer({ compact = false }: Props) {
   const [prompt, setPrompt] = useState("");
   const [slideValue, setSlideValue] = useState<number>(9);
   const [file, setFile] = useState<File | null>(null);
+  const [parsed, setParsed] = useState<ParsedDocument | null>(null);
+  const [parsing, setParsing] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -37,22 +40,49 @@ export function PromptComposer({ compact = false }: Props) {
       navigate({ to: "/sign-up" });
       return;
     }
-    if (prompt.trim().length < 3 && !file) {
-      toast.error("Describe your topic or attach a file");
+    if (parsing) {
+      toast.info("Still reading your document…");
+      return;
+    }
+    if (prompt.trim().length < 3 && !parsed) {
+      toast.error("Describe your topic or attach a document");
       return;
     }
     setModalOpen(true);
   };
 
-  const onFile = (f: File | null) => {
-    if (!f) return setFile(null);
-    const ok = ["application/pdf", "image/jpeg", "image/jpg"].includes(f.type) || /\.(pdf|jpe?g)$/i.test(f.name);
-    if (!ok) { toast.error("Only PDF, JPG, or JPEG files supported"); return; }
+  const onFile = async (f: File | null) => {
+    if (!f) { setFile(null); setParsed(null); return; }
+    const name = f.name.toLowerCase();
+    const ok =
+      f.type === "application/pdf" ||
+      f.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+      name.endsWith(".pdf") ||
+      name.endsWith(".docx");
+    if (!ok) { toast.error("Only PDF or DOCX files supported"); return; }
     if (f.size > 10 * 1024 * 1024) { toast.error("File must be under 10MB"); return; }
     setFile(f);
+    setParsed(null);
+    setParsing(true);
+    try {
+      const doc = await parseDocument(f);
+      if (doc.text.length < 40) {
+        toast.error("Couldn't extract text — is the PDF scanned images only?");
+        setFile(null);
+      } else {
+        setParsed(doc);
+        toast.success(`Read ${doc.charCount.toLocaleString()} characters${doc.truncated ? " (truncated)" : ""}`);
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to parse document";
+      toast.error(msg);
+      setFile(null);
+    } finally {
+      setParsing(false);
+    }
   };
 
-  const composedTopic = file ? `${prompt.trim()}\n\n(Source document attached: ${file.name})` : prompt.trim();
+  const composedTopic = composeSourcedPrompt(prompt, parsed);
 
   return (
     <>
@@ -71,9 +101,19 @@ export function PromptComposer({ compact = false }: Props) {
           />
           {file && (
             <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary border text-xs text-ink">
-              <Paperclip className="w-3.5 h-3.5 text-primary" />
-              <span className="truncate max-w-[200px]">{file.name}</span>
-              <button type="button" onClick={() => setFile(null)} className="hover:text-destructive">
+              {parsing ? (
+                <Loader2 className="w-3.5 h-3.5 text-primary animate-spin" />
+              ) : (
+                <FileText className="w-3.5 h-3.5 text-primary" />
+              )}
+              <span className="truncate max-w-[220px]">{file.name}</span>
+              {parsed && (
+                <span className="text-muted-foreground">
+                  · {(parsed.charCount / 1000).toFixed(1)}k chars{parsed.truncated ? " (truncated)" : ""}
+                </span>
+              )}
+              {parsing && <span className="text-muted-foreground">· reading…</span>}
+              <button type="button" onClick={() => onFile(null)} className="hover:text-destructive">
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -125,11 +165,11 @@ export function PromptComposer({ compact = false }: Props) {
               type="button" onClick={() => fileInput.current?.click()}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card border text-xs text-ink hover:bg-accent transition"
             >
-              <Paperclip className="w-3.5 h-3.5" /> Attach PDF / JPG
+              <Paperclip className="w-3.5 h-3.5" /> Attach PDF / DOCX
             </button>
             <input
               ref={fileInput} type="file"
-              accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg"
+              accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
               className="hidden"
               onChange={(e) => onFile(e.target.files?.[0] ?? null)}
             />
