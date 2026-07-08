@@ -101,9 +101,19 @@ export function PromptComposer({ compact = false }: Props) {
           />
           {file && (
             <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary border text-xs text-ink">
-              <Paperclip className="w-3.5 h-3.5 text-primary" />
-              <span className="truncate max-w-[200px]">{file.name}</span>
-              <button type="button" onClick={() => setFile(null)} className="hover:text-destructive">
+              {parsing ? (
+                <Loader2 className="w-3.5 h-3.5 text-primary animate-spin" />
+              ) : (
+                <FileText className="w-3.5 h-3.5 text-primary" />
+              )}
+              <span className="truncate max-w-[220px]">{file.name}</span>
+              {parsed && (
+                <span className="text-muted-foreground">
+                  · {(parsed.charCount / 1000).toFixed(1)}k chars{parsed.truncated ? " (truncated)" : ""}
+                </span>
+              )}
+              {parsing && <span className="text-muted-foreground">· reading…</span>}
+              <button type="button" onClick={() => onFile(null)} className="hover:text-destructive">
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
