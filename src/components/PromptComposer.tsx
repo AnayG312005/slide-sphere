@@ -165,11 +165,11 @@ export function PromptComposer({ compact = false }: Props) {
               type="button" onClick={() => fileInput.current?.click()}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card border text-xs text-ink hover:bg-accent transition"
             >
-              <Paperclip className="w-3.5 h-3.5" /> Attach PDF / JPG
+              <Paperclip className="w-3.5 h-3.5" /> Attach PDF / DOCX
             </button>
             <input
               ref={fileInput} type="file"
-              accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg"
+              accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
               className="hidden"
               onChange={(e) => onFile(e.target.files?.[0] ?? null)}
             />
