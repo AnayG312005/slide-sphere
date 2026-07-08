@@ -34,7 +34,8 @@ async function parsePdf(file: File): Promise<string> {
 }
 
 async function parseDocx(file: File): Promise<string> {
-  const mammoth = await import("mammoth/mammoth.browser");
+  // @ts-expect-error - no bundled types for the browser build
+  const mammoth = await import("mammoth/mammoth.browser.js");
   const buf = await file.arrayBuffer();
   const res = await mammoth.extractRawText({ arrayBuffer: buf });
   return res.value ?? "";
