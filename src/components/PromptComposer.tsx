@@ -97,7 +97,7 @@ export function PromptComposer({ compact = false }: Props) {
             placeholder="Describe your presentation… e.g. 'AI in healthcare for hospital CIOs, focused on ROI'"
             rows={compact ? 3 : 4}
             className="w-full resize-none bg-transparent text-base sm:text-lg text-ink placeholder:text-muted-foreground/80 focus:outline-none"
-            maxLength={1000}
+            maxLength={10000}
           />
           {file && (
             <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary border text-xs text-ink">

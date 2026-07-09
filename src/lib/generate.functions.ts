@@ -22,7 +22,7 @@ const TONES = ["professional", "casual", "academic", "persuasive", "inspirationa
 const CREDITS_PER_DECK = 5;
 
 const OutlineInput = z.object({
-  topic: z.string().min(3).max(1000),
+  topic: z.string().min(3).max(40000),
   audience: z.string().max(200).optional(),
   tone: z.enum(TONES).default("professional"),
   slideCount: z.number().int().min(3).max(20).default(8),
