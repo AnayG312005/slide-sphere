@@ -1,8 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { auth } from "@clerk/tanstack-react-start/server";
-import { requireUserId } from "./auth.server";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { requireUserId, requireUserIdentity } from "./auth.server";
+import { getSupabaseAdmin } from "./supabase-admin.server";
 import { resolveSlideImage, inferStyleHint } from "./image-pipeline.server";
 import { internalError } from "./safe-error";
 
@@ -149,12 +149,18 @@ const FullDeck = z.object({ slides: z.array(FullSlide).min(1) });
 export const finalizeDeck = createServerFn({ method: "POST" })
   .inputValidator((d) => FinalizeInput.parse(d))
   .handler(async ({ data }) => {
-    const userId = await requireUserId();
+    const identity = await requireUserIdentity();
+    const supabaseAdmin = getSupabaseAdmin();
     await requireUnlimitedIfPremiumSlides(data.slides.length);
 
     // Pre-flight credit check (atomic deduct after success would risk wasted spend on AI failure)
-    const { data: profile } = await supabaseAdmin
-      .from("profiles").select("credits").eq("clerk_user_id", userId).maybeSingle();
+    const { data: ensuredProfile, error: ensureErr } = await supabaseAdmin.rpc("ensure_profile", {
+      _clerk_user_id: identity.accountId,
+      _email: identity.email ?? "",
+      _name: identity.name ?? "",
+    });
+    if (ensureErr) throw internalError("finalizeDeck:ensureProfile", ensureErr);
+    const profile = Array.isArray(ensuredProfile) ? ensuredProfile[0] : ensuredProfile;
     if (!profile || profile.credits < CREDITS_PER_DECK) {
       throw new Error(`INSUFFICIENT_CREDITS: need ${CREDITS_PER_DECK}, have ${profile?.credits ?? 0}`);
     }
@@ -217,7 +223,7 @@ Generate ${data.slides.length} fully-realized slides.`;
     // Persist project + slides
     const { data: project, error: pErr } = await supabaseAdmin
       .from("projects").insert({
-        clerk_user_id: userId,
+        clerk_user_id: identity.accountId,
         title: data.deckTitle,
         description: data.description,
         theme: "warm-sand",
@@ -244,7 +250,7 @@ Generate ${data.slides.length} fully-realized slides.`;
 
     // Deduct credits (atomic)
     const { data: remaining, error: cErr } = await supabaseAdmin.rpc("consume_credits", {
-      _clerk_user_id: userId,
+      _clerk_user_id: identity.accountId,
       _amount: CREDITS_PER_DECK,
       _reason: "deck_generated",
       _project_id: project.id,

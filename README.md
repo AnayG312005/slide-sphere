@@ -105,7 +105,8 @@ bun install
 
 | Variable | Scope | Purpose |
 |----------|-------|---------|
-| `VITE_SUPABASE_URL` | client + server | Lovable Cloud project URL |
+| `VITE_SUPABASE_URL` | client | Lovable Cloud project URL |
+| `SUPABASE_URL` | server | Same backend URL used by server functions |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | client | Anon/publishable key |
 | `SUPABASE_SERVICE_ROLE_KEY` | server | Admin DB + storage access |
 | `VITE_CLERK_PUBLISHABLE_KEY` | client | Clerk frontend |
@@ -113,6 +114,11 @@ bun install
 | `LOVABLE_API_KEY` | server | Lovable AI Gateway (text + image) |
 | `PEXELS_API_KEY` | server | Stock image search |
 | `UNSPLASH_ACCESS_KEY` | server | Stock image search |
+
+For Vercel, configure the same backend and Clerk project values used by the
+Lovable deployment. Server-only variables must be present in Vercel's runtime
+environment so dashboard projects, profiles and credits resolve to the same
+workspace.
 
 ## Usage Guide
 

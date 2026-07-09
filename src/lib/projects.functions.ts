@@ -1,15 +1,16 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireUserId } from "./auth.server";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { requireUserId, requireUserIdentity, type UserIdentity } from "./auth.server";
+import { getSupabaseAdmin } from "./supabase-admin.server";
 import { internalError } from "./safe-error";
 
 export const listProjects = createServerFn({ method: "GET" }).handler(async () => {
-  const userId = await requireUserId();
+  const identity = await requireUserIdentity();
+  const supabaseAdmin = getSupabaseAdmin();
   const { data, error } = await supabaseAdmin
     .from("projects")
     .select("id,title,description,theme,status,updated_at,created_at")
-    .eq("clerk_user_id", userId)
+    .in("clerk_user_id", identity.accountIds)
     .order("updated_at", { ascending: false });
   if (error) throw internalError("listProjects", error);
   const ids = (data ?? []).map((p) => p.id);
@@ -29,12 +30,13 @@ export const listProjects = createServerFn({ method: "GET" }).handler(async () =
 export const getProject = createServerFn({ method: "POST" })
   .inputValidator((d: { id: string }) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data }) => {
-    const userId = await requireUserId();
+    const identity = await requireUserIdentity();
+    const supabaseAdmin = getSupabaseAdmin();
     const { data: project, error } = await supabaseAdmin
       .from("projects")
       .select("*")
       .eq("id", data.id)
-      .eq("clerk_user_id", userId)
+      .in("clerk_user_id", identity.accountIds)
       .maybeSingle();
     if (error) throw internalError("getProject", error);
     if (!project) throw new Error("Project not found");
@@ -49,12 +51,13 @@ export const getProject = createServerFn({ method: "POST" })
 export const deleteProject = createServerFn({ method: "POST" })
   .inputValidator((d: { id: string }) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data }) => {
-    const userId = await requireUserId();
+    const identity = await requireUserIdentity();
+    const supabaseAdmin = getSupabaseAdmin();
     const { error } = await supabaseAdmin
       .from("projects")
       .delete()
       .eq("id", data.id)
-      .eq("clerk_user_id", userId);
+      .in("clerk_user_id", identity.accountIds);
     if (error) throw internalError("deleteProject", error);
     return { ok: true };
   });
@@ -68,13 +71,14 @@ const SlidePatch = z.object({
   image_url: z.string().url().nullable().optional(),
 });
 
-async function applySlidePatch(userId: string, patch: z.infer<typeof SlidePatch>) {
+async function applySlidePatch(identity: UserIdentity, patch: z.infer<typeof SlidePatch>) {
+  const supabaseAdmin = getSupabaseAdmin();
   const { data: slide } = await supabaseAdmin
     .from("slides").select("project_id").eq("id", patch.id).maybeSingle();
   if (!slide) throw new Error("Slide not found");
   const { data: project } = await supabaseAdmin
     .from("projects").select("clerk_user_id").eq("id", slide.project_id).maybeSingle();
-  if (!project || project.clerk_user_id !== userId) throw new Error("Forbidden");
+  if (!project || !identity.accountIds.includes(project.clerk_user_id)) throw new Error("Forbidden");
 
   const update: {
     title?: string;
@@ -98,8 +102,8 @@ async function applySlidePatch(userId: string, patch: z.infer<typeof SlidePatch>
 export const updateSlide = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => SlidePatch.parse(d))
   .handler(async ({ data }) => {
-    const userId = await requireUserId();
-    await applySlidePatch(userId, data);
+    const identity = await requireUserIdentity();
+    await applySlidePatch(identity, data);
     return { ok: true };
   });
 
@@ -108,10 +112,11 @@ export const updateSlidesBulk = createServerFn({ method: "POST" })
     z.object({ slides: z.array(SlidePatch).min(1).max(50) }).parse(d)
   )
   .handler(async ({ data }) => {
-    const userId = await requireUserId();
+    const identity = await requireUserIdentity();
+    const supabaseAdmin = getSupabaseAdmin();
     const projectIds = new Set<string>();
     for (const p of data.slides) {
-      const pid = await applySlidePatch(userId, p);
+      const pid = await applySlidePatch(identity, p);
       projectIds.add(pid);
     }
     // Touch parent project(s) so updated_at reflects edit time on dashboard.

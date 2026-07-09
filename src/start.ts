@@ -5,8 +5,6 @@ import { renderErrorPage } from "./lib/error-page";
 import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
 import { attachClerkAuth } from "@/lib/clerk-auth-attacher";
 
-const hasClerkSecretKey = Boolean(process.env.CLERK_SECRET_KEY);
-
 const errorMiddleware = createMiddleware().server(async ({ next }) => {
   try {
     return await next();
@@ -24,7 +22,5 @@ const errorMiddleware = createMiddleware().server(async ({ next }) => {
 
 export const startInstance = createStart(() => ({
   functionMiddleware: [attachSupabaseAuth, attachClerkAuth],
-  requestMiddleware: hasClerkSecretKey
-    ? [errorMiddleware, clerkMiddleware()]
-    : [errorMiddleware],
+  requestMiddleware: [errorMiddleware, clerkMiddleware()],
 }));
