@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireUserId } from "./auth.server";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { requireUserIdentity } from "./auth.server";
+import { getSupabaseAdmin } from "./supabase-admin.server";
 import { internalError } from "./safe-error";
 
 const STYLES = ["illustration", "photo", "abstract", "3d", "line-art"] as const;
@@ -27,7 +27,8 @@ const SIGN_TTL = 60 * 60 * 24 * 365 * 5; // 5 years
 export const regenerateSlideImage = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => Input.parse(d))
   .handler(async ({ data }) => {
-    const userId = await requireUserId();
+    const identity = await requireUserIdentity();
+    const supabaseAdmin = getSupabaseAdmin();
 
     // Ownership check
     const { data: slide } = await supabaseAdmin
@@ -35,7 +36,7 @@ export const regenerateSlideImage = createServerFn({ method: "POST" })
     if (!slide) throw new Error("Slide not found");
     const { data: project } = await supabaseAdmin
       .from("projects").select("clerk_user_id").eq("id", slide.project_id).maybeSingle();
-    if (!project || project.clerk_user_id !== userId) throw new Error("Forbidden");
+    if (!project || !identity.accountIds.includes(project.clerk_user_id)) throw new Error("Forbidden");
 
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("AI key not configured");
@@ -62,7 +63,7 @@ export const regenerateSlideImage = createServerFn({ method: "POST" })
     if (!b64) throw new Error("AI did not return an image");
 
     const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
-    const path = `${userId}/${data.slideId}-${Date.now()}.png`;
+    const path = `${identity.accountId}/${data.slideId}-${Date.now()}.png`;
     const { error: upErr } = await supabaseAdmin.storage
       .from(BUCKET)
       .upload(path, bytes, { contentType: "image/png", upsert: true });

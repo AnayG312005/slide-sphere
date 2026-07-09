@@ -1,33 +1,23 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { getOptionalUserId } from "./auth.server";
-import { requireUserId } from "./auth.server";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { clerkClient } from "@clerk/tanstack-react-start/server";
+import { getOptionalUserIdentity, requireUserId, requireUserIdentity } from "./auth.server";
+import { getSupabaseAdmin } from "./supabase-admin.server";
 
 export const getMyProfile = createServerFn({ method: "GET" }).handler(async () => {
-  const userId = await getOptionalUserId();
-  if (!userId) {
+  const identity = await getOptionalUserIdentity();
+  if (!identity) {
     return {
       profile: { credits: 0, plan: "basic", totalEarned: 0, totalSpent: 0 },
       authenticated: false as const,
     };
   }
-  let email: string | null = null;
-  let name: string | null = null;
-  try {
-    const user = await clerkClient().users.getUser(userId);
-    email = user.emailAddresses?.[0]?.emailAddress ?? null;
-    name = user.firstName ?? user.username ?? null;
-  } catch {
-    // Non-fatal — proceed with nulls
-  }
 
   try {
+    const supabaseAdmin = getSupabaseAdmin();
     const { data, error } = await supabaseAdmin.rpc("ensure_profile", {
-      _clerk_user_id: userId,
-      _email: email ?? "",
-      _name: name ?? "",
+      _clerk_user_id: identity.accountId,
+      _email: identity.email ?? "",
+      _name: identity.name ?? "",
     });
     if (error) throw new Error(error.message);
     const profile = Array.isArray(data) ? data[0] : data;
@@ -50,11 +40,12 @@ export const getMyProfile = createServerFn({ method: "GET" }).handler(async () =
 });
 
 export const getCreditHistory = createServerFn({ method: "GET" }).handler(async () => {
-  const userId = await requireUserId();
+  const identity = await requireUserIdentity();
+  const supabaseAdmin = getSupabaseAdmin();
   const { data, error } = await supabaseAdmin
     .from("credit_transactions")
     .select("id,delta,reason,created_at,project_id")
-    .eq("clerk_user_id", userId)
+    .in("clerk_user_id", identity.accountIds)
     .order("created_at", { ascending: false })
     .limit(50);
   if (error) {
