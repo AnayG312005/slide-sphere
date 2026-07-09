@@ -123,15 +123,15 @@ Target slides: ${data.slideCount}`;
   });
 
 const FinalizeInput = z.object({
-  topic: z.string().min(1),
+  topic: z.string().min(1).max(40000),
   tone: z.enum(TONES).default("professional"),
   style: z.enum(STYLES).default("modern-corporate"),
   density: z.enum(DENSITIES).default("concise"),
-  deckTitle: z.string().min(1),
-  description: z.string().optional().default(""),
+  deckTitle: z.string().min(1).max(300),
+  description: z.string().max(500).optional().default(""),
   slides: z.array(z.object({
-    title: z.string().min(1),
-    summary: z.string().optional().default(""),
+    title: z.string().min(1).max(200),
+    summary: z.string().max(500).optional().default(""),
     layout: z.enum(["title", "content", "two-column", "quote", "closing"]).default("content"),
   })).min(1).max(20),
 });
