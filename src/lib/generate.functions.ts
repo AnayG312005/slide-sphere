@@ -1,19 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { auth } from "@clerk/tanstack-react-start/server";
-import { requireUserId, requireUserIdentity } from "./auth.server";
+import { requireUnlimitedPlanForSlideCount, requireUserId, requireUserIdentity } from "./auth.server";
 import { getSupabaseAdmin } from "./supabase-admin.server";
 import { resolveSlideImage, inferStyleHint } from "./image-pipeline.server";
 import { internalError } from "./safe-error";
-
-async function requireUnlimitedIfPremiumSlides(slideCount: number) {
-  if (slideCount <= 12) return;
-  const session = await auth();
-  const ok = typeof session.has === "function" && session.has({ plan: "unlimited" });
-  if (!ok) {
-    throw new Error("PREMIUM_REQUIRED: Upgrade to the Unlimited plan to generate 12–15 slide decks.");
-  }
-}
 
 const STYLES = ["modern-corporate", "glassmorphism", "minimal-clean", "dark-futuristic", "startup-pitch", "creative-gradient"] as const;
 const DENSITIES = ["minimal", "concise", "extensive"] as const;
@@ -74,7 +64,7 @@ export const generateOutline = createServerFn({ method: "POST" })
   .inputValidator((d) => OutlineInput.parse(d))
   .handler(async ({ data }) => {
     await requireUserId();
-    await requireUnlimitedIfPremiumSlides(data.slideCount);
+    await requireUnlimitedPlanForSlideCount(data.slideCount);
     const sys = `You are an elite AI presentation strategist (Gamma / Beautiful.ai-class).
 Analyze the user's brief: extract topic, audience, tone, purpose, complexity, slide count.
 
@@ -151,7 +141,7 @@ export const finalizeDeck = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const identity = await requireUserIdentity();
     const supabaseAdmin = getSupabaseAdmin();
-    await requireUnlimitedIfPremiumSlides(data.slides.length);
+    await requireUnlimitedPlanForSlideCount(data.slides.length);
 
     // Pre-flight credit check (atomic deduct after success would risk wasted spend on AI failure)
     const { data: ensuredProfile, error: ensureErr } = await supabaseAdmin.rpc("ensure_profile", {

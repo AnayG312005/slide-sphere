@@ -20,7 +20,11 @@ const errorMiddleware = createMiddleware().server(async ({ next }) => {
   }
 });
 
+const requestMiddleware = process.env.CLERK_SECRET_KEY
+  ? [errorMiddleware, clerkMiddleware()]
+  : [errorMiddleware];
+
 export const startInstance = createStart(() => ({
   functionMiddleware: [attachSupabaseAuth, attachClerkAuth],
-  requestMiddleware: [errorMiddleware, clerkMiddleware()],
+  requestMiddleware,
 }));
