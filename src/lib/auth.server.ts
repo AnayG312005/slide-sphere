@@ -37,6 +37,11 @@ function base64UrlToBytes(value: string): Uint8Array {
   return Uint8Array.from(binary, (char) => char.charCodeAt(0));
 }
 
+function base64UrlToArrayBuffer(value: string): ArrayBuffer {
+  const bytes = base64UrlToBytes(value);
+  return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+}
+
 function base64UrlToJson(value: string): Record<string, unknown> {
   return JSON.parse(new TextDecoder().decode(base64UrlToBytes(value))) as Record<string, unknown>;
 }
@@ -84,7 +89,9 @@ async function verifyBearerToken(token: string): Promise<Record<string, unknown>
   if (typeof payload.exp === "number" && payload.exp < now - 60) throw new Error("Auth token expired");
   if (typeof payload.nbf === "number" && payload.nbf > now + 60) throw new Error("Auth token not active");
 
-  const jwk = (await getClerkJwks(issuer)).find((key) => key.kid === header.kid);
+  const jwk = (await getClerkJwks(issuer)).find(
+    (key) => (key as JsonWebKey & { kid?: string }).kid === header.kid,
+  );
   if (!jwk) throw new Error("Authentication key not found");
 
   const key = await crypto.subtle.importKey(
@@ -97,7 +104,7 @@ async function verifyBearerToken(token: string): Promise<Record<string, unknown>
   const verified = await crypto.subtle.verify(
     "RSASSA-PKCS1-v1_5",
     key,
-    base64UrlToBytes(encodedSignature),
+    base64UrlToArrayBuffer(encodedSignature),
     new TextEncoder().encode(`${encodedHeader}.${encodedPayload}`),
   );
   if (!verified) throw new Error("Invalid auth signature");
@@ -129,7 +136,11 @@ async function getOptionalClerkSession(): Promise<MinimalClerkSession | null> {
       return {
         userId: session.userId,
         sessionClaims,
-        has: (params) => (typeof session.has === "function" ? session.has(params) === true : false),
+        has: (params) => {
+          if (!params.plan || typeof session.has !== "function") return false;
+          const hasPlan = session.has as unknown as (value: { plan: string }) => boolean;
+          return hasPlan({ plan: params.plan }) === true;
+        },
       };
     }
   } catch (error) {
