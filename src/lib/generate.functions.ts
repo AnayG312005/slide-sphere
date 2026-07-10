@@ -144,13 +144,27 @@ export const finalizeDeck = createServerFn({ method: "POST" })
     await requireUnlimitedPlanForSlideCount(data.slides.length);
 
     // Pre-flight credit check (atomic deduct after success would risk wasted spend on AI failure)
-    const { data: ensuredProfile, error: ensureErr } = await supabaseAdmin.rpc("ensure_profile", {
-      _clerk_user_id: identity.accountId,
-      _email: identity.email ?? "",
-      _name: identity.name ?? "",
-    });
-    if (ensureErr) throw internalError("finalizeDeck:ensureProfile", ensureErr);
-    const profile = Array.isArray(ensuredProfile) ? ensuredProfile[0] : ensuredProfile;
+    const { data: existingProfiles, error: existingErr } = await supabaseAdmin
+      .from("profiles")
+      .select("credits")
+      .in("clerk_user_id", identity.accountIds)
+      .order("created_at", { ascending: true })
+      .limit(1);
+    if (existingErr) throw internalError("finalizeDeck:loadProfile", existingErr);
+
+    let profile = existingProfiles?.[0];
+    if (!profile) {
+      if (!identity.email) {
+        throw new Error("Verified email is required before creating a workspace profile.");
+      }
+      const { data: ensuredProfile, error: ensureErr } = await supabaseAdmin.rpc("ensure_profile", {
+        _clerk_user_id: identity.accountId,
+        _email: identity.email,
+        _name: identity.name ?? "",
+      });
+      if (ensureErr) throw internalError("finalizeDeck:ensureProfile", ensureErr);
+      profile = Array.isArray(ensuredProfile) ? ensuredProfile[0] : ensuredProfile;
+    }
     if (!profile || profile.credits < CREDITS_PER_DECK) {
       throw new Error(`INSUFFICIENT_CREDITS: need ${CREDITS_PER_DECK}, have ${profile?.credits ?? 0}`);
     }

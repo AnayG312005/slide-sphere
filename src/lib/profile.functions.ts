@@ -14,13 +14,27 @@ export const getMyProfile = createServerFn({ method: "GET" }).handler(async () =
 
   try {
     const supabaseAdmin = getSupabaseAdmin();
-    const { data, error } = await supabaseAdmin.rpc("ensure_profile", {
-      _clerk_user_id: identity.accountId,
-      _email: identity.email ?? "",
-      _name: identity.name ?? "",
-    });
-    if (error) throw new Error(error.message);
-    const profile = Array.isArray(data) ? data[0] : data;
+    const { data: existingProfiles, error: existingErr } = await supabaseAdmin
+      .from("profiles")
+      .select("credits,plan,total_earned,total_spent")
+      .in("clerk_user_id", identity.accountIds)
+      .order("created_at", { ascending: true })
+      .limit(1);
+    if (existingErr) throw new Error(existingErr.message);
+
+    let profile = existingProfiles?.[0];
+    if (!profile) {
+      if (!identity.email) {
+        throw new Error("Verified email is required before creating a workspace profile.");
+      }
+      const { data, error } = await supabaseAdmin.rpc("ensure_profile", {
+        _clerk_user_id: identity.accountId,
+        _email: identity.email,
+        _name: identity.name ?? "",
+      });
+      if (error) throw new Error(error.message);
+      profile = Array.isArray(data) ? data[0] : data;
+    }
     return {
       profile: {
         credits: profile.credits as number,
