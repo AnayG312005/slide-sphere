@@ -4,7 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useUser } from "@clerk/tanstack-react-start";
 import { listProjects, deleteProject } from "@/lib/projects.functions";
 import { PromptComposer } from "@/components/PromptComposer";
-import { FileText, Trash2, Loader2, Sparkles, Crown } from "lucide-react";
+import { AlertTriangle, FileText, Trash2, Loader2, Sparkles, Crown } from "lucide-react";
 import { Footer } from "@/components/Footer";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -21,11 +21,12 @@ function Dashboard() {
   const { user } = useUser();
   const router = useRouter();
   const hasUnlimited = useHasUnlimited();
-  const { data, isLoading, refetch } = useQuery({
+  const { data, error, isError, isLoading, refetch } = useQuery({
     queryKey: ["projects"],
     queryFn: () => fetchProjects(),
     refetchOnWindowFocus: true,
     refetchInterval: 30_000,
+    retry: 1,
   });
 
   const delMut = useMutation({
@@ -104,6 +105,22 @@ function Dashboard() {
           {[0,1,2,3,4,5].map(i => (
             <div key={i} className="h-48 rounded-2xl bg-card border animate-pulse" />
           ))}
+        </div>
+      ) : isError ? (
+        <div className="glass border rounded-3xl p-10 text-center">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-destructive/10 grid place-items-center mb-5">
+            <AlertTriangle className="w-6 h-6 text-destructive" />
+          </div>
+          <h3 className="font-display text-2xl text-ink">Workspace data couldn't load</h3>
+          <p className="text-muted-foreground mt-2 max-w-lg mx-auto">
+            {(error as Error)?.message || "Please retry. The issue has been logged for diagnosis."}
+          </p>
+          <button
+            onClick={() => refetch()}
+            className="mt-6 inline-flex items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-glow transition hover:opacity-90"
+          >
+            Retry
+          </button>
         </div>
       ) : !data?.projects.length ? (
         <div className="glass border rounded-3xl p-14 text-center">
