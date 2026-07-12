@@ -33,31 +33,30 @@ const OutlineSchema = z.object({
 });
 
 async function callGemini(systemPrompt: string, userPrompt: string, schema: object, fnName: string) {
-  const apiKey = process.env.LOVABLE_API_KEY;
-  if (!apiKey) throw new Error("AI key not configured");
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-      tools: [{ type: "function", function: { name: fnName, parameters: schema } }],
-      tool_choice: { type: "function", function: { name: fnName } },
-    }),
-  });
-  if (response.status === 429) throw new Error("Rate limit exceeded. Please try again shortly.");
-  if (response.status === 402) throw new Error("AI credits exhausted. Please add credits in workspace settings.");
-  if (!response.ok) {
-    const text = await response.text();
-    throw internalError(`callGemini:${fnName}`, new Error(`status=${response.status} body=${text.slice(0, 500)}`));
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("GEMINI_API_KEY is not configured. Set it in your environment variables.");
+  const ai = new GoogleGenAI({ apiKey });
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+      config: {
+        systemInstruction: systemPrompt,
+        responseMimeType: "application/json",
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        responseSchema: schema as any,
+      },
+    });
+    const text = response.text;
+    if (!text) throw new Error("AI did not return a result");
+    return JSON.parse(text);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/429|rate/i.test(msg)) throw new Error("Rate limit exceeded. Please try again shortly.");
+    if (/quota|billing|402/i.test(msg)) throw new Error("Gemini quota exhausted. Please check your Google AI billing.");
+    throw internalError(`callGemini:${fnName}`, err instanceof Error ? err : new Error(msg));
   }
-  const json = await response.json();
-  const toolCall = json.choices?.[0]?.message?.tool_calls?.[0];
-  if (!toolCall) throw new Error("AI did not return a result");
-  return JSON.parse(toolCall.function.arguments);
+}
 }
 
 /** Step 1: generate the outline (no DB write, no credit charge yet). */
