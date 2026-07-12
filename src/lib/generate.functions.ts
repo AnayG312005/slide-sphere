@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 import { requireUnlimitedPlanForSlideCount, requireUserId, requireUserIdentity } from "./auth.server";
 import { getSupabaseAdmin } from "./supabase-admin.server";
 import { resolveSlideImage, inferStyleHint } from "./image-pipeline.server";
