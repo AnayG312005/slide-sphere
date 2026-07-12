@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { GoogleGenAI, Modality } from "@google/genai";
 import { requireUserIdentity } from "./auth.server";
 import { getSupabaseAdmin } from "./supabase-admin.server";
 import { internalError } from "./safe-error";
