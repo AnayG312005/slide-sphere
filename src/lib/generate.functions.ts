@@ -57,7 +57,6 @@ async function callGemini(systemPrompt: string, userPrompt: string, schema: obje
     throw internalError(`callGemini:${fnName}`, err instanceof Error ? err : new Error(msg));
   }
 }
-}
 
 /** Step 1: generate the outline (no DB write, no credit charge yet). */
 export const generateOutline = createServerFn({ method: "POST" })
